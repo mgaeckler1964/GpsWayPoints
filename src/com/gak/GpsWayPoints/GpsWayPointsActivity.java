@@ -393,7 +393,7 @@ public class GpsWayPointsActivity extends Activity
     	case R.id.about:
     		showResult(
     			"GpsWayPoints", 
-    			"GpsWayPoints 2.6.3\n(c) 2024 by Martin Gäckler\nhttps://www.gaeckler.at/"
+    			"GpsWayPoints 2.6.5\n(c) 2024 by Martin Gäckler\nhttps://www.gaeckler.at/"
     		);
     		break;
     	default:
