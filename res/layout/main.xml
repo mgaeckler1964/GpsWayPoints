@@ -4,14 +4,12 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:keepScreenOn="true"
-    android:background="#FFFFFF"
     >
 
 	<TextView
 	    android:id="@+id/statusLabel"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
-	    android:textColor="#000000"
 	    android:textSize="20sp"
 	    android:text="@string/statusLabel" />
 	
@@ -19,13 +17,14 @@
 	    android:layout_width="fill_parent" 
 	    android:layout_height="wrap_content"
 	    android:id="@+id/altitudeLabel"
-	    android:textColor="#000000"
 	    android:textSize="20sp"
 	    android:text="@string/altitudeLabel"/>
 	
 	<com.gak.GpsWayPoints.GpsWayPointsWidget
 	    android:id="@+id/myRose"
 	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent" />
+	    android:layout_height="fill_parent" 
+    	android:background="#FFFFFF"
+	/>
 	
 </LinearLayout>
