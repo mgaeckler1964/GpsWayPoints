@@ -13,6 +13,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.GpsSatellite;
 import android.location.GpsStatus;
 import android.location.Location;
@@ -74,6 +75,11 @@ public class GpsWayPointsActivity extends Activity
     {
 		System.out.println("onCreate");
         super.onCreate(savedInstanceState);
+        if( checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_DENIED )
+        {
+        	showMessage("GpsWayPoints", "Berechtigung für Standort fehlt!", true);
+        	return;
+        }
 
     	m_waypoints = getSharedPreferences(WAYPOINTS_FILE, 0);
         if( savedInstanceState != null )
@@ -391,9 +397,10 @@ public class GpsWayPointsActivity extends Activity
     		finish();
             break;
     	case R.id.about:
-    		showResult(
+    		showMessage(
     			"GpsWayPoints", 
-    			"GpsWayPoints 2.6.5\n(c) 2024 by Martin Gäckler\nhttps://www.gaeckler.at/"
+    			"GpsWayPoints 2.6.5\n(c) 2024 by Martin Gäckler\nhttps://www.gaeckler.at/",
+    			false
     		);
     		break;
     	default:
@@ -598,7 +605,7 @@ public class GpsWayPointsActivity extends Activity
 			Integer.toString(m_locationList.size())
     	);
     }
-    private void showResult( String title, String resultString )
+    private void showMessage( String title, String resultString, final boolean terminate )
     {
     	AlertDialog.Builder builder = new AlertDialog.Builder(this);
     	builder.setMessage(resultString)
@@ -607,6 +614,10 @@ public class GpsWayPointsActivity extends Activity
     	       .setNegativeButton("Fertig", new DialogInterface.OnClickListener() {
     	           public void onClick(DialogInterface dialog, int id) {
     	                dialog.cancel();
+    	                if( terminate )
+    	                {
+    	                	finish();
+    	                }
     	           }
     	       })
     	       .setIcon(R.drawable.icon);
