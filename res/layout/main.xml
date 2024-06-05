@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:keepScreenOn="true"
+    android:background="#FFFFFF"
+    >
+
+	<TextView
+	    android:id="@+id/statusLabel"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:textColor="#000000"
+	    android:textSize="20sp"
+	    android:text="@string/statusLabel" />
+	
+	<TextView  
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content"
+	    android:id="@+id/altitudeLabel"
+	    android:textColor="#000000"
+	    android:textSize="20sp"
+	    android:text="@string/altitudeLabel"/>
+	
+	<com.gak.GpsWayPoints.GpsWayPointsWidget
+	    android:id="@+id/myRose"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent" />
+	
+</LinearLayout>

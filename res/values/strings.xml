@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GpsWayPoints</string>
+    
+    <string name="savePos">Standort speichern</string>
+    <string name="savePosAs">Standort mit Namen speichern &#8230;</string>
+    <string name="loadPos">Standort laden &#8230;</string>
+    <string name="deletePos">Standort löschen &#8230;</string>
+    <string name="about">Info</string>
+    <string name="exit">Beenden</string>
+    
+    <string name="statusLabel">Status</string>
+    <string name="altitudeLabel">Höhe</string>
+    
+    <string name="positionName">Name</string>
+</resources>
