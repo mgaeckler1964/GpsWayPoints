@@ -397,12 +397,16 @@ public class GpsWayPointsActivity extends Activity
     		finish();
             break;
     	case R.id.about:
+    	{
+    		String name = getString(R.string.app_name);
+    		String version = getString(R.string.app_version);
     		showMessage(
-    			"GpsWayPoints", 
-    			"GpsWayPoints 2.6.5\n(c) 2024 by Martin Gäckler\nhttps://www.gaeckler.at/",
+    			name, 
+    			name + " "+version+"\n(c) 2024 by Martin Gäckler\nhttps://www.gaeckler.at/",
     			false
     		);
     		break;
+    	}
     	default:
     		break;
     	}
