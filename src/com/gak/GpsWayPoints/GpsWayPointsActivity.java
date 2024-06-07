@@ -44,8 +44,7 @@ public class GpsWayPointsActivity extends Activity
 	static final int MIN_BEARING_COUNT = 2;
 	static final String CONFIGURATION_FILE = "GpsWayPoints.cfg";
 	static final String WAYPOINTS_FILE = "GpsWayPoints.gwp";
-	static final String	HOME_LONGITUDE_KEY = "homeLongitude";
-	static final String	HOME_LATITUDE_KEY = "homeLatitude";
+	static final String	HOME_KEY = "homePosition";
 
 	static final String	FIX_COUNT_KEY = "homeLatitude";
 
@@ -82,26 +81,28 @@ public class GpsWayPointsActivity extends Activity
         }
 
     	m_waypoints = getSharedPreferences(WAYPOINTS_FILE, 0);
-        if( savedInstanceState != null )
+
+    	String homeStr = "";
+    	if( savedInstanceState != null )
         {
-        	m_home.setLongitude(savedInstanceState.getDouble(HOME_LONGITUDE_KEY));
-            m_home.setLatitude(savedInstanceState.getDouble(HOME_LATITUDE_KEY));
+        	homeStr = savedInstanceState.getString(HOME_KEY);
             m_locationFixCount = savedInstanceState.getLong(FIX_COUNT_KEY);
         }
         else
         {
         	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, 0);
-        	double homeLongitude = settings.getFloat(HOME_LONGITUDE_KEY,0); 
-        	double homeLaitude = settings.getFloat(HOME_LATITUDE_KEY,0);
-        	if (homeLongitude == 0 && homeLaitude == 0)
-        	{
-            	homeLongitude = 14.282733; 
-            	homeLaitude = 48.298820;
-        	}
-
-        	m_home.setLongitude(homeLongitude);
-        	m_home.setLatitude(homeLaitude);
+        	homeStr = settings.getString(HOME_KEY,"");
         }
+    	Location tmpLocation = locationString(homeStr);
+    	if( tmpLocation != null )
+    	{
+    		m_home = tmpLocation;
+    	}
+    	else
+    	{
+        	m_home.setLongitude(14.282733);
+        	m_home.setLatitude(48.298820);
+    	}
 
         PowerManager	pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         m_wakeLock = pm.newWakeLock( PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "GpsWayPoints" );
@@ -423,18 +424,21 @@ public class GpsWayPointsActivity extends Activity
         }
     }
     
-    @Override
-    public void onPause()
+    private void saveSharedPreferences()
     {
     	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, 0);
         SharedPreferences.Editor editor = settings.edit();
 
-        editor.putFloat(HOME_LONGITUDE_KEY, (float) m_home.getLongitude() );
-        editor.putFloat(HOME_LATITUDE_KEY, (float) m_home.getLatitude());
+        editor.putString(HOME_KEY, locationString(m_home) );
 
 		// Commit the edits!
         editor.commit();
-
+    }
+    
+    @Override
+    public void onPause()
+    {
+    	saveSharedPreferences();
         super.onPause();
     }
 	@Override
@@ -446,14 +450,7 @@ public class GpsWayPointsActivity extends Activity
 		m_locationManager.removeUpdates( m_locationListener );
 		m_locationManager.removeGpsStatusListener( m_gpsStatusListener );
         
-    	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, 0);
-        SharedPreferences.Editor editor = settings.edit();
-
-        editor.putFloat(HOME_LONGITUDE_KEY, (float) m_home.getLongitude() );
-        editor.putFloat(HOME_LATITUDE_KEY, (float) m_home.getLatitude());
-
-        // Commit the edits!
-        editor.commit();
+    	saveSharedPreferences();
 
         m_wakeLock.release();
         super.onDestroy();
@@ -462,8 +459,7 @@ public class GpsWayPointsActivity extends Activity
 	@Override
 	protected void  onSaveInstanceState (Bundle outState)
 	{
-		outState.putDouble(HOME_LONGITUDE_KEY, m_home.getLongitude() );
-		outState.putDouble(HOME_LATITUDE_KEY, m_home.getLatitude());
+		outState.putString(HOME_KEY, locationString(m_home));
 		outState.putLong(FIX_COUNT_KEY, m_locationFixCount);
 	}
 	
@@ -582,6 +578,7 @@ public class GpsWayPointsActivity extends Activity
 	
 	private int getCorrectedAltidute( Location loc)
 	{
+		// target height for my home: 288m
 		return (int)loc.getAltitude()-70;
 	}
 	private void setAltitude( Location newLocation )
