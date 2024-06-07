@@ -38,9 +38,8 @@ import android.widget.TextView;
 
 public class GpsWayPointsActivity extends Activity
 {
-	static final int MIN_DISTANCE = 10;
-	static final int MAX_AGE_MS = 2000;
-	static final int MIN_LOCATION_COUNT = 10;
+	static final int MAX_AGE_MS = 5000;
+	static final int MIN_LOCATION_COUNT = 20;
 	static final int MIN_BEARING_COUNT = 2;
 	static final String CONFIGURATION_FILE = "GpsWayPoints.cfg";
 	static final String WAYPOINTS_FILE = "GpsWayPoints.gwp";
@@ -479,7 +478,7 @@ public class GpsWayPointsActivity extends Activity
     		int countPoints = 0;
 	    	for( Location curLoc : m_locationList )
 	    	{
-	    		if( curLoc.distanceTo(newLocation) > MIN_DISTANCE )
+	    		if( curLoc.distanceTo(newLocation) >= m_accuracy )
 	    		{
 	    			final double bearing = curLoc.bearingTo(newLocation);
 	    			if( bearing < minBearing )
