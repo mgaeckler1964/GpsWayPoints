@@ -34,7 +34,8 @@ public class GpsWayPointsWidget extends View
 	private double m_currentSpeed = 0;
 	private double m_absHomeBearing = 0;
 	private double m_currBearing = 0;
-	private int m_distanceM = 0;
+	private int m_distanceDM = 0;
+	private int m_distanceHM = 0;
 	private Paint m_kompassPaint = null;
 	private Paint m_labelPaint = null;
 	private Paint m_homeNeedlePaint = null;
@@ -171,15 +172,29 @@ public class GpsWayPointsWidget extends View
     	canvas.drawText(s_speedFormat.format(m_currentSpeed), (float)m_centerX, (float)(m_centerY+textOffset), m_speedPaint);
 
     	textOffset += m_labelPaint.getTextSize();
-    	canvas.drawText(s_totalDistanceFormat.format(m_distanceM), (float)m_centerX, (float)(m_centerY+textOffset), m_labelPaint);
+    	canvas.drawText(
+			s_totalDistanceFormat.format(m_distanceDM)+'/'+
+			s_totalDistanceFormat.format(m_distanceHM), 
+			(float)m_centerX, (float)(m_centerY+textOffset), m_labelPaint
+    	);
     }
 
-	public void showMovement( double newSpeed, int distanceM, double absHomeBearing, double currBearing )
+	public void showMovement( double newSpeed, int distanceDM, int distanceHM, double absHomeBearing, double currBearing )
 	{
 		m_currentSpeed = newSpeed;
-		m_distanceM = distanceM;
+		m_distanceDM = distanceDM;
+		m_distanceHM = distanceHM;
 		m_absHomeBearing = absHomeBearing;
 		m_currBearing = currBearing;
+		invalidate();
+	}
+	public void clearMovementDisplay()
+	{
+		m_currentSpeed = 0;
+		m_distanceDM = 0;
+		m_distanceHM = 0;
+		m_absHomeBearing = 0;
+		m_currBearing = 0;
 		invalidate();
 	}
 }

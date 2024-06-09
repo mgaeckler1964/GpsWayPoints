@@ -7,7 +7,7 @@
     >
 
 	<TextView
-	    android:id="@+id/statusLabel"
+	    android:id="@+id/statusView"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
 	    android:textSize="20sp"
@@ -16,7 +16,7 @@
 	<TextView  
 	    android:layout_width="fill_parent" 
 	    android:layout_height="wrap_content"
-	    android:id="@+id/altitudeLabel"
+	    android:id="@+id/altitudeView"
 	    android:textSize="20sp"
 	    android:text="@string/altitudeLabel"/>
 	

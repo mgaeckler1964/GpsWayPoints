@@ -48,8 +48,8 @@ public class GpsWayPointsActivity extends Activity
 	static final String	FIX_COUNT_KEY = "homeLatitude";
 
 	GpsWayPointsWidget		m_theRose = null;
-	TextView				m_statusLabel = null;
-	TextView				m_altitudeLabel = null;
+	TextView				m_statusView = null;
+	TextView				m_altitudeView = null;
 	double					m_altitude = 0;
 	double					m_curBearing = 0;
 	double					m_homeBearing = 0;
@@ -115,10 +115,10 @@ public class GpsWayPointsActivity extends Activity
 		System.out.println("setContentView");
         setContentView(R.layout.main);
 
-        m_statusLabel = (TextView)findViewById( R.id.statusLabel );
+        m_statusView = (TextView)findViewById( R.id.statusView );
     	setStatus( m_myStatus );
     	m_theRose = (GpsWayPointsWidget)findViewById( R.id.myRose );
-    	m_altitudeLabel = (TextView)findViewById( R.id.altitudeLabel );
+    	m_altitudeView = (TextView)findViewById( R.id.altitudeView );
 
         // Acquire a reference to the system Location Manager
 		System.out.println("m_locationManager");
@@ -134,7 +134,7 @@ public class GpsWayPointsActivity extends Activity
             	if( status == LocationProvider.OUT_OF_SERVICE )
             	{
             		setStatus( "Kein GPS Empfang" );
-            		showMovement( 0, 0, 0, 0  );
+            		clearMovementDisplay();
             	}
             	else if( status == LocationProvider.TEMPORARILY_UNAVAILABLE )
             		setStatus( "Kurzfristig kein GPS Empfang" );
@@ -152,7 +152,7 @@ public class GpsWayPointsActivity extends Activity
             public void onProviderDisabled(String provider)
             {
             	setStatus( "GPS ist abgeschaltet");
-            	showMovement( 0, 0, 0, 0 );
+            	clearMovementDisplay();
             }
 
 			@Override
@@ -203,24 +203,30 @@ public class GpsWayPointsActivity extends Activity
           m_locationManager.addGpsStatusListener(m_gpsStatusListener);
 
           System.out.println("showSpeed");
-          showMovement( 0, 0, 0, 0 );
+          clearMovementDisplay();
 //          onLocationChanged2(m_home);
 	}
 
 	String locationString( Location src )
 	{
-		return src.getProvider() + '|' + Double.toString(src.getLongitude()) + '|' + Double.toString(src.getLatitude());  
+		return src.getProvider() + '|' + 
+				Double.toString(src.getLongitude()) + '|' + 
+				Double.toString(src.getLatitude()) + '|' +
+				Double.toString(src.getAltitude());  
 	}
 	Location locationString( String src )
 	{
 		String [] elements = src.split("[|]");
-		if(elements.length != 3) {
+		if(elements.length < 3 || elements.length > 4) {
 			return null;
 		}
 		
 		Location newLocation = new Location(elements[0]);
 		newLocation.setLongitude(Double.parseDouble(elements[1]));
 		newLocation.setLatitude(Double.parseDouble(elements[2]));
+		if (elements.length == 4) {
+			newLocation.setAltitude(Double.parseDouble(elements[3]));;
+		}
 		return newLocation;  
 	}
 
@@ -567,7 +573,11 @@ public class GpsWayPointsActivity extends Activity
     	
     	{
     		final double absHomeBearing = newLocation.bearingTo(m_home);
-    		showMovement( speed, m_home.distanceTo(newLocation), absHomeBearing, curBearing );
+    		showMovement( 
+    			speed, 
+    			m_home.distanceTo(newLocation), m_home.getAltitude()-newLocation.getAltitude(), 
+    			absHomeBearing, curBearing 
+    		);
     	}
     	
     	setAltitude(newLocation);
@@ -585,20 +595,28 @@ public class GpsWayPointsActivity extends Activity
 		int altidute = getCorrectedAltidute(newLocation); 
 		int gpsAltidute = (int)newLocation.getAltitude();
 		
-    	m_altitudeLabel.setText( 
+    	m_altitudeView.setText( 
     		Integer.toString(altidute) + "m (" + Integer.toString(gpsAltidute) + ")/" +
     		Double.toString(newLocation.getLongitude()) + '/' + Double.toString(newLocation.getLatitude())
     	);
 	}
 	
-    void showMovement( double speed, double totalDistance, double absHomeBearing, double currBearing )
+    void showMovement( double speed, double distanceDM, double distanceHM, double absHomeBearing, double currBearing )
     {
-    	m_theRose.showMovement(speed, (int)totalDistance, absHomeBearing, currBearing );
+    	m_theRose.showMovement(
+    		speed, 
+    		(int)(distanceDM+0.5), (int)(distanceHM+0.5), 
+    		absHomeBearing, currBearing 
+    	);
+    }
+    void clearMovementDisplay()
+    {
+    	m_theRose.clearMovementDisplay();
     }
     void setStatus( String text )
     {
     	m_myStatus = text;
-    	m_statusLabel.setText( 
+    	m_statusView.setText( 
 			text + ' ' + 
 			m_accuracyFormat.format(m_accuracy) + ' ' + 
 			Long.toString(m_locationFixCount) + '/' +
