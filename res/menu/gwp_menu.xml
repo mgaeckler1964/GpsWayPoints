@@ -5,8 +5,7 @@
     <item android:visible="true" android:title="@string/savePosAs" android:id="@+id/savePosAs" android:checkable="false" android:checked="false" android:enabled="true"></item>
     <item android:visible="true" android:title="@string/loadPos" android:id="@+id/loadPos" android:checkable="false" android:checked="false" android:enabled="true"></item>
     <item android:visible="true" android:title="@string/deletePos" android:id="@+id/deletePos" android:checkable="false" android:checked="false" android:enabled="true"></item>
-    <item android:visible="true" android:title="==========" android:enabled="false"></item>
+    <item android:visible="true" android:title="@string/calibration" android:id="@+id/calibration" android:checkable="true" android:checked="false" android:enabled="true"></item>
     <item android:visible="true" android:title="@string/about" android:id="@+id/about" android:checkable="false" android:checked="false" android:enabled="true"></item>
-    <item android:visible="true" android:title="==========" android:enabled="false"></item>
     <item android:visible="true" android:title="@string/exit" android:id="@+id/exit" android:checkable="false" android:checked="false" android:enabled="true"></item>
 </menu>

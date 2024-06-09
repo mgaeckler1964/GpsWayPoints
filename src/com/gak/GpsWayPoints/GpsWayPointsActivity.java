@@ -45,8 +45,12 @@ public class GpsWayPointsActivity extends Activity
 	static final String WAYPOINTS_FILE = "GpsWayPoints.gwp";
 	static final String	HOME_KEY = "homePosition";
 
-	static final String	FIX_COUNT_KEY = "homeLatitude";
-
+	static final String	CALIBRATION_KEY = "calibrationMode";
+	static final String	FIX_COUNT_KEY = "fixCount";
+	static final String	SUM_LONGITUDE_KEY = "sumLongitude";
+	static final String	SUM_LATITUDE_KEY = "sumLatitude";
+	static final String	SUM_ALTITUDE_KEY = "sumAltitude";
+	
 	GpsWayPointsWidget		m_theRose = null;
 	TextView				m_statusView = null;
 	TextView				m_altitudeView = null;
@@ -59,6 +63,10 @@ public class GpsWayPointsActivity extends Activity
 	LocationListener		m_locationListener = null;
 	GpsStatus.Listener		m_gpsStatusListener;
 	Queue<Location>			m_locationList = new LinkedList<Location>();
+	boolean					m_calibration = false;
+	double					m_sumLongitude = 0;
+	double					m_sumLatitude = 0;
+	double					m_sumAltitude = 0;
 	long					m_locationFixCount = 0;
 	double					m_accuracy = 0.0;
 	private DecimalFormat	m_accuracyFormat = new DecimalFormat( "Genauigkeit: 0.000m" );
@@ -66,7 +74,7 @@ public class GpsWayPointsActivity extends Activity
 
 	Location				m_home = new Location("");
 	SharedPreferences 		m_waypoints = null;
-
+	
 	/** Called when the activity is first created. */
 	@Override
     public void onCreate(Bundle savedInstanceState)
@@ -86,6 +94,10 @@ public class GpsWayPointsActivity extends Activity
         {
         	homeStr = savedInstanceState.getString(HOME_KEY);
             m_locationFixCount = savedInstanceState.getLong(FIX_COUNT_KEY);
+            m_calibration = savedInstanceState.getBoolean(CALIBRATION_KEY);
+            m_sumLongitude = savedInstanceState.getDouble(SUM_LONGITUDE_KEY);
+            m_sumLatitude = savedInstanceState.getDouble(SUM_LATITUDE_KEY);
+            m_sumAltitude = savedInstanceState.getDouble(SUM_ALTITUDE_KEY);
         }
         else
         {
@@ -365,6 +377,8 @@ public class GpsWayPointsActivity extends Activity
 		menu.findItem(R.id.savePos).setEnabled(hasLocation);
 		menu.findItem(R.id.savePosAs).setEnabled(hasLocation);
 
+		menu.findItem(R.id.calibration).setChecked(m_calibration);
+
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -399,6 +413,20 @@ public class GpsWayPointsActivity extends Activity
         	}
         	break;
     	}
+    	case R.id.calibration:
+    		if( !m_calibration )
+    		{
+    	    	m_calibration = true;
+    	    	m_sumLongitude = 0;
+    	    	m_sumLatitude = 0;
+    	    	m_sumAltitude = 0;
+    	    	m_locationFixCount = 0;    		}
+    		else
+    		{
+    	    	m_calibration = false;
+    		}
+    		break;
+
     	case R.id.exit:
     		finish();
             break;
@@ -466,6 +494,10 @@ public class GpsWayPointsActivity extends Activity
 	{
 		outState.putString(HOME_KEY, locationString(m_home));
 		outState.putLong(FIX_COUNT_KEY, m_locationFixCount);
+		outState.putBoolean(CALIBRATION_KEY, m_calibration);
+		outState.putDouble(SUM_LONGITUDE_KEY, m_sumLongitude);
+		outState.putDouble(SUM_LATITUDE_KEY, m_sumLatitude);
+		outState.putDouble(SUM_ALTITUDE_KEY, m_sumAltitude);
 	}
 	
 	void onLocationChanged2( Location newLocation )
@@ -473,6 +505,13 @@ public class GpsWayPointsActivity extends Activity
     	double	speed, sDistance, elapsedTime, curBearing;
     	
     	++m_locationFixCount;
+    	if( m_calibration )
+    	{
+    		m_sumLongitude += newLocation.getLongitude();
+    		m_sumLatitude += newLocation.getLatitude();
+    		m_sumAltitude += newLocation.getAltitude();
+    	}
+
     	m_accuracy = newLocation.getAccuracy();
     	setStatus( m_myStatus );
 
@@ -592,12 +631,26 @@ public class GpsWayPointsActivity extends Activity
 	}
 	private void setAltitude( Location newLocation )
 	{
-		int altidute = getCorrectedAltidute(newLocation); 
-		int gpsAltidute = (int)newLocation.getAltitude();
+		int snapedAltidute = getCorrectedAltidute(newLocation);
+		double longitude, latitude, altitude;
+
+		if(m_calibration)
+		{
+			longitude = m_sumLongitude/m_locationFixCount;
+			latitude = m_sumLatitude/m_locationFixCount;
+			altitude = m_sumAltitude/m_locationFixCount;
+		}
+		else
+		{
+			longitude = newLocation.getLongitude();
+			latitude = newLocation.getLatitude();
+			altitude = (int)newLocation.getAltitude();
+		}
 		
     	m_altitudeView.setText( 
-    		Integer.toString(altidute) + "m (" + Integer.toString(gpsAltidute) + ")/" +
-    		Double.toString(newLocation.getLongitude()) + '/' + Double.toString(newLocation.getLatitude())
+    		(m_calibration ? "*" : " ") +
+    		Integer.toString(snapedAltidute) + "m (" + Integer.toString((int)(altitude+0.5)) + ")/" +
+    		Double.toString(longitude) + '/' + Double.toString(latitude)
     	);
 	}
 	

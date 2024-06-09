@@ -7,6 +7,8 @@
     <string name="savePosAs">Standort mit Namen speichern &#8230;</string>
     <string name="loadPos">Standort laden &#8230;</string>
     <string name="deletePos">Standort löschen &#8230;</string>
+    <string name="calibration">Kalibrierung</string>
+    
     <string name="about">Info</string>
     <string name="exit">Beenden</string>
     
