@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -22,6 +24,7 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.PowerManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -71,6 +74,7 @@ public class GpsWayPointsActivity extends Activity
 	double					m_accuracy = 0.0;
 	private DecimalFormat	m_accuracyFormat = new DecimalFormat( "Genauigkeit: 0.000m" );
 	PowerManager.WakeLock	m_wakeLock;
+	CountDownTimer			m_gpsTimer = null;
 
 	Location				m_home = new Location("");
 	SharedPreferences 		m_waypoints = null;
@@ -216,7 +220,25 @@ public class GpsWayPointsActivity extends Activity
 
           System.out.println("showSpeed");
           clearMovementDisplay();
-//          onLocationChanged2(m_home);
+
+          m_gpsTimer = new CountDownTimer(100000000, 1000) {
+
+				@Override
+        	    public void onTick(long millisUntilFinished) {
+        	    	 Location newLocation = m_locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        	    	 if (newLocation != null)
+        	    	 {
+        	    		 onLocationChanged2(newLocation);
+        	    	 }
+        	     }
+
+				@Override
+				public void onFinish() {
+					m_gpsTimer.start();
+				}
+        	 }.start();
+
+          //onLocationChanged2(m_home);
 	}
 
 	String locationString( Location src )
@@ -500,9 +522,22 @@ public class GpsWayPointsActivity extends Activity
 		outState.putDouble(SUM_ALTITUDE_KEY, m_sumAltitude);
 	}
 	
+	private final ReentrantLock m_lock = new ReentrantLock();
 	void onLocationChanged2( Location newLocation )
     {
-    	double	speed, sDistance, elapsedTime, curBearing;
+		 m_lock.lock();
+		 try {
+			 onLocationChanged3( newLocation );
+		 } finally {
+			 m_lock.unlock();
+		 }
+		 
+    }
+
+	private void onLocationChanged3( Location newLocation )
+    {
+
+		double	speed, sDistance, elapsedTime, curBearing;
     	
     	++m_locationFixCount;
     	if( m_calibration )
@@ -623,12 +658,13 @@ public class GpsWayPointsActivity extends Activity
     	
     	m_locationList.add(newLocation);
     }
-	
+
+	// correction valid for Linz/Austria
 	private int getCorrectedAltidute( Location loc)
 	{
-		// target height for my home: 288m
-		return (int)loc.getAltitude()-70;
+		return (int)loc.getAltitude()-50;
 	}
+	
 	private void setAltitude( Location newLocation )
 	{
 		int snapedAltidute = getCorrectedAltidute(newLocation);
