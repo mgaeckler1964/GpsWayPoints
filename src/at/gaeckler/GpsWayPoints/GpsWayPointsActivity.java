@@ -3,11 +3,8 @@ package at.gaeckler.GpsWayPoints;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.app.Activity;
@@ -38,12 +35,10 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import at.gaeckler.gps.GpsProcessor;
 
 public class GpsWayPointsActivity extends Activity
 {
-	static final int MAX_AGE_MS = 5000;
-	static final int MIN_LOCATION_COUNT = 20;
-	static final int MIN_BEARING_COUNT = 2;
 	static final String CONFIGURATION_FILE = "GpsWayPoints.cfg";
 	static final String WAYPOINTS_FILE = "GpsWayPoints.gwp";
 	static final String	HOME_KEY = "homePosition";
@@ -54,24 +49,21 @@ public class GpsWayPointsActivity extends Activity
 	static final String	SUM_LATITUDE_KEY = "sumLatitude";
 	static final String	SUM_ALTITUDE_KEY = "sumAltitude";
 	
+	GpsProcessor			m_processor = new GpsProcessor();
 	GpsWayPointsWidget		m_theRose = null;
 	TextView				m_statusView = null;
 	TextView				m_altitudeView = null;
-	double					m_altitude = 0;
-	double					m_curBearing = 0;
 	double					m_homeBearing = 0;
 	
 	String					m_myStatus = "Willkommen";
 	LocationManager			m_locationManager;
 	LocationListener		m_locationListener = null;
 	GpsStatus.Listener		m_gpsStatusListener;
-	Queue<Location>			m_locationList = new LinkedList<Location>();
 	boolean					m_calibration = false;
 	double					m_sumLongitude = 0;
 	double					m_sumLatitude = 0;
 	double					m_sumAltitude = 0;
 	long					m_locationFixCount = 0;
-	double					m_accuracy = 0.0;
 	private DecimalFormat	m_accuracyFormat = new DecimalFormat( "Genauigkeit: 0.000m" );
 	PowerManager.WakeLock	m_wakeLock;
 	CountDownTimer			m_gpsTimer = null;
@@ -397,7 +389,7 @@ public class GpsWayPointsActivity extends Activity
 		boolean hasWayPoints = m_waypoints!= null && m_waypoints.getAll().size() > 0;
 		menu.findItem(R.id.loadPos).setEnabled(hasWayPoints);
 		menu.findItem(R.id.deletePos).setEnabled(hasWayPoints);
-		boolean hasLocation = m_locationList.peek() != null;;
+		boolean hasLocation = m_processor.hasLocation();
 		menu.findItem(R.id.savePos).setEnabled(hasLocation);
 		menu.findItem(R.id.savePosAs).setEnabled(hasLocation);
 
@@ -421,7 +413,7 @@ public class GpsWayPointsActivity extends Activity
     		break;
     	case R.id.savePosAs:
     	{
-        	Location lastLocation = m_locationList.peek();
+        	Location lastLocation = m_processor.lastLocation();
         	if (lastLocation != null)
         	{
         		savePositionAs(lastLocation);
@@ -430,7 +422,7 @@ public class GpsWayPointsActivity extends Activity
     	}
     	case R.id.savePos:
     	{
-        	Location lastLocation = m_locationList.peek();
+        	Location lastLocation = m_processor.lastLocation();
         	if (lastLocation != null)
         	{
         		m_home = lastLocation;
@@ -538,9 +530,6 @@ public class GpsWayPointsActivity extends Activity
 
 	private void onLocationChanged3( Location newLocation )
     {
-
-		double	speed, sDistance, elapsedTime, curBearing;
-    	
     	++m_locationFixCount;
     	if( m_calibration )
     	{
@@ -549,116 +538,19 @@ public class GpsWayPointsActivity extends Activity
     		m_sumAltitude += newLocation.getAltitude();
     	}
 
-    	m_accuracy = newLocation.getAccuracy();
+    	m_processor.onLocationChanged4(newLocation);
     	setStatus( m_myStatus );
 
-    	// calculate the current bearing
-    	{
-    		double sumBearing = 0;
-    		double minBearing = 1000;
-    		double maxBearing = -1000;
-    		int countPoints = 0;
-	    	for( Location curLoc : m_locationList )
-	    	{
-	    		if( curLoc.distanceTo(newLocation) >= m_accuracy )
-	    		{
-	    			final double bearing = curLoc.bearingTo(newLocation);
-	    			if( bearing < minBearing )
-	    			{
-	    				minBearing = bearing;
-	    			}
-	    			else if( bearing > maxBearing )
-	    			{
-	    				maxBearing = bearing;
-	    			}
-	    			sumBearing += bearing;
-	    			countPoints++;
-	    		}
-	    	}
-	    	sumBearing -= minBearing;
-	    	sumBearing -= maxBearing;
-	    	countPoints -= 2;
-	    	if( countPoints > MIN_BEARING_COUNT )
-	    	{
-	    		m_curBearing = curBearing = sumBearing / countPoints;
-	    		
-	    	}
-	    	else
-	    	{
-	    		curBearing = m_curBearing;
-	    	}
-    	}
-    	
-    	// remove outdated way points
-    	Location speedLocation = m_locationList.peek(); 
-    	if( speedLocation != null )
-    	{
-    		long maxTime = newLocation.getTime() - MAX_AGE_MS;
-    		while( (speedLocation.distanceTo(newLocation) > m_accuracy*2 || speedLocation.getTime() < maxTime) 
-    				&& m_locationList.size() > MIN_LOCATION_COUNT)
-    		{
-    			m_locationList.remove();
-    			Location tmpLocation = m_locationList.peek();
-    			if( tmpLocation == null )
-    				break;
-    			if( tmpLocation.distanceTo(newLocation) < m_accuracy )
-    				break;
-    			speedLocation = tmpLocation;
-    		}
-    		
-    	}
-
-    	// find the position to calculate the speed
-    	if( speedLocation != null )
-    	{
-    		long maxTime = newLocation.getTime() - 2000;
-			speedLocation = null;
-			for( Location curLoc : m_locationList )
-			{
-				if( curLoc.getTime() < maxTime )
-				{
-					break;
-				}
-	    		if( curLoc.distanceTo(newLocation) > m_accuracy )
-	    		{
-	    			speedLocation = curLoc;
-	    			break;
-	    		}
-			}
-    	}
-    	
-    	// calculate the current speed
-    	if( speedLocation != null )
-    	{
-			sDistance = speedLocation.distanceTo(newLocation);
-			elapsedTime = newLocation.getTime() - speedLocation.getTime();
-			elapsedTime /= 1000;
-	    }
-    	else
-    	{
-    		sDistance = 0;
-    		elapsedTime = 0;
-    	}
-    	
-    	if( elapsedTime > 0 && sDistance >= m_accuracy )
-    		speed = (sDistance / elapsedTime) * 3.6;
-    	else if( newLocation.hasSpeed() )
-    		speed = newLocation.getSpeed() * 3.6;
-    	else
-    		speed = 0;
-    	
     	{
     		final double absHomeBearing = newLocation.bearingTo(m_home);
     		showMovement( 
-    			speed, 
+    			m_processor.getCurSpeed(), 
     			m_home.distanceTo(newLocation), m_home.getAltitude()-newLocation.getAltitude(), 
-    			absHomeBearing, curBearing 
+    			absHomeBearing, m_processor.getCurBearing() 
     		);
     	}
     	
     	setAltitude(newLocation);
-    	
-    	m_locationList.add(newLocation);
     }
 
 	// correction valid for Linz/Austria
@@ -709,9 +601,9 @@ public class GpsWayPointsActivity extends Activity
     	m_myStatus = text;
     	m_statusView.setText( 
 			text + ' ' + 
-			m_accuracyFormat.format(m_accuracy) + ' ' + 
+			m_accuracyFormat.format(m_processor.getAccuracy()) + ' ' + 
 			Long.toString(m_locationFixCount) + '/' +
-			Integer.toString(m_locationList.size())
+			Integer.toString(m_processor.size())
     	);
     }
     private void showMessage( String title, String resultString, final boolean terminate )
