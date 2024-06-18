@@ -176,16 +176,16 @@ public class GpsWayPointsActivity extends Activity
 			{
 				onLocationChanged2( location );
 			}
-          };
+        };
 
           // Register the listener with the Location Manager to receive location updates
-          System.out.println("requestLocationUpdates");
-	      m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 50, (float) 0.1, m_locationListener);
-          m_locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 50, (float) 0.1, m_locationListener);
+        System.out.println("requestLocationUpdates");
+	    m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 50, (float) 0.1, m_locationListener);
+        m_locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 50, (float) 0.1, m_locationListener);
 
-          System.out.println("m_gpsStatusListener");
-          m_gpsStatusListener = new GpsStatus.Listener()
-          {
+        System.out.println("m_gpsStatusListener");
+        m_gpsStatusListener = new GpsStatus.Listener()
+        {
 
 			@Override
 			public void onGpsStatusChanged(int event)
@@ -214,31 +214,33 @@ public class GpsWayPointsActivity extends Activity
 					);
 				}
 			}
-          };
-          System.out.println("addGpsStatusListener");
-          m_locationManager.addGpsStatusListener(m_gpsStatusListener);
+        };
+        System.out.println("addGpsStatusListener");
+        m_locationManager.addGpsStatusListener(m_gpsStatusListener);
 
-          System.out.println("showSpeed");
-          clearMovementDisplay();
+        System.out.println("showSpeed");
+        clearMovementDisplay();
 
-          m_gpsTimer = new CountDownTimer(100000000, 1000) {
+        m_gpsTimer = new CountDownTimer(100000000, 1000) {
 
-				@Override
-        	    public void onTick(long millisUntilFinished) {
-        	    	 Location newLocation = m_locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        	    	 if (newLocation != null)
-        	    	 {
-        	    		 onLocationChanged2(newLocation);
-        	    	 }
-        	     }
+        	private Location m_lastKnown=null;
 
-				@Override
-				public void onFinish() {
-					m_gpsTimer.start();
-				}
-        	 }.start();
+        	@Override
+        	public void onTick(long millisUntilFinished) {
+        		Location newLocation = m_locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        		if (newLocation != null && (m_lastKnown==null || !m_lastKnown.equals(newLocation)))
+        		{
+        			onLocationChanged2(newLocation);
+        		}
+        	}
+		
+        	@Override
+        	public void onFinish() {
+        		m_gpsTimer.start();
+        	}
+		}.start();
 
-          //onLocationChanged2(m_home);
+        //onLocationChanged2(m_home);
 	}
 
 	String locationString( Location src )
