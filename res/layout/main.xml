@@ -20,7 +20,7 @@
 	    android:textSize="20sp"
 	    android:text="@string/altitudeLabel"/>
 	
-	<com.gak.GpsWayPoints.GpsWayPointsWidget
+	<at.gaeckler.GpsWayPoints.GpsWayPointsWidget
 	    android:id="@+id/myRose"
 	    android:layout_width="fill_parent"
 	    android:layout_height="fill_parent" 

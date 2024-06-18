@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.gak.GpsWayPoints;
+package at.gaeckler.GpsWayPoints;
 
 import java.text.DecimalFormat;
 
