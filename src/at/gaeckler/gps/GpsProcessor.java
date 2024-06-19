@@ -36,12 +36,12 @@ public class GpsProcessor {
 	{
 		return m_locationList.peek();
 	}
-	public int size()
+	public int getNumLocations()
 	{
 		return m_locationList.size();
 	}
 
-	public void onLocationChanged4( Location newLocation )
+	public void onLocationChanged( Location newLocation )
     {
 		double	sDistance, elapsedTime;
     	

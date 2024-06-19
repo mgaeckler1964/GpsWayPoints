@@ -5,9 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -16,12 +14,8 @@ import android.content.pm.PackageManager;
 import android.location.GpsSatellite;
 import android.location.GpsStatus;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.PowerManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -35,9 +29,9 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import at.gaeckler.gps.GpsProcessor;
+import at.gaeckler.gps.GpsActivity;
 
-public class GpsWayPointsActivity extends Activity
+public class GpsWayPointsActivity extends GpsActivity
 {
 	static final String CONFIGURATION_FILE = "GpsWayPoints.cfg";
 	static final String WAYPOINTS_FILE = "GpsWayPoints.gwp";
@@ -49,16 +43,13 @@ public class GpsWayPointsActivity extends Activity
 	static final String	SUM_LATITUDE_KEY = "sumLatitude";
 	static final String	SUM_ALTITUDE_KEY = "sumAltitude";
 	
-	GpsProcessor			m_processor = new GpsProcessor();
 	GpsWayPointsWidget		m_theRose = null;
 	TextView				m_statusView = null;
 	TextView				m_altitudeView = null;
 	double					m_homeBearing = 0;
 	
 	String					m_myStatus = "Willkommen";
-	LocationManager			m_locationManager;
-	LocationListener		m_locationListener = null;
-	GpsStatus.Listener		m_gpsStatusListener;
+
 	boolean					m_calibration = false;
 	double					m_sumLongitude = 0;
 	double					m_sumLatitude = 0;
@@ -66,8 +57,7 @@ public class GpsWayPointsActivity extends Activity
 	long					m_locationFixCount = 0;
 	private DecimalFormat	m_accuracyFormat = new DecimalFormat( "Genauigkeit: 0.000m" );
 	PowerManager.WakeLock	m_wakeLock;
-	CountDownTimer			m_gpsTimer = null;
-
+	
 	Location				m_home = new Location("");
 	SharedPreferences 		m_waypoints = null;
 	
@@ -75,7 +65,6 @@ public class GpsWayPointsActivity extends Activity
 	@Override
     public void onCreate(Bundle savedInstanceState)
     {
-		System.out.println("onCreate");
         super.onCreate(savedInstanceState);
         if( checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_DENIED )
         {
@@ -128,109 +117,9 @@ public class GpsWayPointsActivity extends Activity
     	m_theRose = (GpsWayPointsWidget)findViewById( R.id.myRose );
     	m_altitudeView = (TextView)findViewById( R.id.altitudeView );
 
-        // Acquire a reference to the system Location Manager
-		System.out.println("m_locationManager");
-        m_locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-        // Define a listener that responds to location updates
-		System.out.println("m_locationListener");
-        m_locationListener = new LocationListener()
-        {
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) 
-            {
-            	if( status == LocationProvider.OUT_OF_SERVICE )
-            	{
-            		setStatus( "Kein GPS Empfang" );
-            		clearMovementDisplay();
-            	}
-            	else if( status == LocationProvider.TEMPORARILY_UNAVAILABLE )
-            		setStatus( "Kurzfristig kein GPS Empfang" );
-            	else if( status == LocationProvider.AVAILABLE )
-            		setStatus( "GPS Empfang" );
-            }
-
-            @Override
-            public void onProviderEnabled(String provider)
-            {
-            	setStatus( "GPS ist eingeschaltet");
-            }
-
-            @Override
-            public void onProviderDisabled(String provider)
-            {
-            	setStatus( "GPS ist abgeschaltet");
-            	clearMovementDisplay();
-            }
-
-			@Override
-			public void onLocationChanged(Location location)
-			{
-				onLocationChanged2( location );
-			}
-        };
-
-          // Register the listener with the Location Manager to receive location updates
-        System.out.println("requestLocationUpdates");
-	    m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 50, (float) 0.1, m_locationListener);
-        m_locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 50, (float) 0.1, m_locationListener);
-
-        System.out.println("m_gpsStatusListener");
-        m_gpsStatusListener = new GpsStatus.Listener()
-        {
-
-			@Override
-			public void onGpsStatusChanged(int event)
-			{
-				if( event == GpsStatus.GPS_EVENT_STARTED )
-	            	setStatus( "GPS gestartet");
-				else if( event == GpsStatus.GPS_EVENT_STOPPED )
-	            	setStatus( "GPS gestoppt");
-				else if( event == GpsStatus.GPS_EVENT_FIRST_FIX )
-	            	setStatus( "GPS erster Fix");
-				else if( event == GpsStatus.GPS_EVENT_SATELLITE_STATUS  )
-				{
-					int Satellites = 0;
-					int SatellitesInFix = 0;
-					for (GpsSatellite sat : m_locationManager.getGpsStatus(null).getSatellites())
-					{
-						if(sat.usedInFix())
-							SatellitesInFix++;              
-
-						Satellites++;
-					}
-					setStatus( 
-						"GPS Satelliten: " + 
-						Integer.toString(SatellitesInFix) + "/" + 
-						Integer.toString(Satellites)
-					);
-				}
-			}
-        };
-        System.out.println("addGpsStatusListener");
-        m_locationManager.addGpsStatusListener(m_gpsStatusListener);
 
         System.out.println("showSpeed");
         clearMovementDisplay();
-
-        m_gpsTimer = new CountDownTimer(100000000, 1000) {
-
-        	private Location m_lastKnown=null;
-
-        	@Override
-        	public void onTick(long millisUntilFinished) {
-        		Location newLocation = m_locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        		if (newLocation != null && (m_lastKnown==null || !m_lastKnown.equals(newLocation)))
-        		{
-        			onLocationChanged2(newLocation);
-        		}
-        	}
-		
-        	@Override
-        	public void onFinish() {
-        		m_gpsTimer.start();
-        	}
-		}.start();
 
         //onLocationChanged2(m_home);
 	}
@@ -389,7 +278,7 @@ public class GpsWayPointsActivity extends Activity
 		boolean hasWayPoints = m_waypoints!= null && m_waypoints.getAll().size() > 0;
 		menu.findItem(R.id.loadPos).setEnabled(hasWayPoints);
 		menu.findItem(R.id.deletePos).setEnabled(hasWayPoints);
-		boolean hasLocation = m_processor.hasLocation();
+		boolean hasLocation = getHasLocation();
 		menu.findItem(R.id.savePos).setEnabled(hasLocation);
 		menu.findItem(R.id.savePosAs).setEnabled(hasLocation);
 
@@ -413,7 +302,7 @@ public class GpsWayPointsActivity extends Activity
     		break;
     	case R.id.savePosAs:
     	{
-        	Location lastLocation = m_processor.lastLocation();
+        	Location lastLocation = getLastLocation();
         	if (lastLocation != null)
         	{
         		savePositionAs(lastLocation);
@@ -422,7 +311,7 @@ public class GpsWayPointsActivity extends Activity
     	}
     	case R.id.savePos:
     	{
-        	Location lastLocation = m_processor.lastLocation();
+        	Location lastLocation = getLastLocation();
         	if (lastLocation != null)
         	{
         		m_home = lastLocation;
@@ -493,12 +382,6 @@ public class GpsWayPointsActivity extends Activity
 	@Override
 	public void onDestroy()
 	{
-        // Acquire a reference to the system Location Manager
-        // LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-		m_locationManager.removeUpdates( m_locationListener );
-		m_locationManager.removeGpsStatusListener( m_gpsStatusListener );
-        
     	saveSharedPreferences();
 
         m_wakeLock.release();
@@ -516,43 +399,6 @@ public class GpsWayPointsActivity extends Activity
 		outState.putDouble(SUM_ALTITUDE_KEY, m_sumAltitude);
 	}
 	
-	private final ReentrantLock m_lock = new ReentrantLock();
-	void onLocationChanged2( Location newLocation )
-    {
-		 m_lock.lock();
-		 try {
-			 onLocationChanged3( newLocation );
-		 } finally {
-			 m_lock.unlock();
-		 }
-		 
-    }
-
-	private void onLocationChanged3( Location newLocation )
-    {
-    	++m_locationFixCount;
-    	if( m_calibration )
-    	{
-    		m_sumLongitude += newLocation.getLongitude();
-    		m_sumLatitude += newLocation.getLatitude();
-    		m_sumAltitude += newLocation.getAltitude();
-    	}
-
-    	m_processor.onLocationChanged4(newLocation);
-    	setStatus( m_myStatus );
-
-    	{
-    		final double absHomeBearing = newLocation.bearingTo(m_home);
-    		showMovement( 
-    			m_processor.getCurSpeed(), 
-    			m_home.distanceTo(newLocation), m_home.getAltitude()-newLocation.getAltitude(), 
-    			absHomeBearing, m_processor.getCurBearing() 
-    		);
-    	}
-    	
-    	setAltitude(newLocation);
-    }
-
 	// correction valid for Linz/Austria
 	private int getCorrectedAltidute( Location loc)
 	{
@@ -601,9 +447,9 @@ public class GpsWayPointsActivity extends Activity
     	m_myStatus = text;
     	m_statusView.setText( 
 			text + ' ' + 
-			m_accuracyFormat.format(m_processor.getAccuracy()) + ' ' + 
+			m_accuracyFormat.format(getAccuracy()) + ' ' + 
 			Long.toString(m_locationFixCount) + '/' +
-			Integer.toString(m_processor.size())
+			Integer.toString(getNumLocations())
     	);
     }
     private void showMessage( String title, String resultString, final boolean terminate )
@@ -625,4 +471,89 @@ public class GpsWayPointsActivity extends Activity
     	AlertDialog alert = builder.create();
     	alert.show();
     }
+
+	@Override
+	public void onLocationServiceOff() {
+		setStatus( "Kein GPS Empfang" );
+		clearMovementDisplay();
+	}
+
+	@Override
+	public void onLocationTempOff() {
+		setStatus( "Kurzfristig kein GPS Empfang" );
+	}
+
+	@Override
+	public void onLocationServiceOn() {
+		setStatus( "GPS Empfang" );
+	}
+
+	@Override
+	public void onLocationEnabled()
+	{
+    	setStatus( "GPS ist eingeschaltet");
+	}
+
+	@Override
+	public void onLocationDisabled()
+	{
+    	setStatus( "GPS ist abgeschaltet");
+    	clearMovementDisplay();
+	}
+	
+	@Override
+	public void onGpsStatusChanged2(int event)
+	{
+		if( event == GpsStatus.GPS_EVENT_STARTED )
+        	setStatus( "GPS gestartet");
+		else if( event == GpsStatus.GPS_EVENT_STOPPED )
+        	setStatus( "GPS gestoppt");
+		else if( event == GpsStatus.GPS_EVENT_FIRST_FIX )
+        	setStatus( "GPS erster Fix");
+		else if( event == GpsStatus.GPS_EVENT_SATELLITE_STATUS  )
+		{
+			int Satellites = 0;
+			int SatellitesInFix = 0;
+			for (GpsSatellite sat : getSatellites())
+			{
+				if(sat.usedInFix())
+					SatellitesInFix++;              
+
+				Satellites++;
+			}
+			setStatus( 
+				"GPS Satelliten: " + 
+				Integer.toString(SatellitesInFix) + "/" + 
+				Integer.toString(Satellites)
+			);
+		}
+		
+	}
+
+	@Override
+	public void onLocationChanged( Location newLocation )
+    {
+    	++m_locationFixCount;
+    	if( m_calibration )
+    	{
+    		m_sumLongitude += newLocation.getLongitude();
+    		m_sumLatitude += newLocation.getLatitude();
+    		m_sumAltitude += newLocation.getAltitude();
+    	}
+
+    	setStatus( m_myStatus );
+
+    	{
+    		final double absHomeBearing = newLocation.bearingTo(m_home);
+    		showMovement( 
+    			getCurSpeed(), 
+    			m_home.distanceTo(newLocation), m_home.getAltitude()-newLocation.getAltitude(), 
+    			absHomeBearing, getCurBearing() 
+    		);
+    	}
+    	
+    	setAltitude(newLocation);
+    }
+
+
 }
