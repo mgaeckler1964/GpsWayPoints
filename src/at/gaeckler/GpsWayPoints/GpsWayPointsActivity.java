@@ -61,14 +61,33 @@ public class GpsWayPointsActivity extends GpsActivity
 	Location				m_home = new Location("");
 	SharedPreferences 		m_waypoints = null;
 	
-	/** Called when the activity is first created. */
+    public void showMessage( String title, String message, final boolean terminate )
+    {
+    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    	builder.setMessage(message)
+    		   .setTitle(title)
+    	       .setCancelable(false)
+    	       .setNegativeButton("Fertig", new DialogInterface.OnClickListener() {
+    	           public void onClick(DialogInterface dialog, int id) {
+    	                dialog.cancel();
+    	                if( terminate )
+    	                {
+    	                	finish();
+    	                }
+    	           }
+    	       })
+    	       .setIcon(R.drawable.icon);
+    	AlertDialog alert = builder.create();
+    	alert.show();
+    }
+
+    /** Called when the activity is first created. */
 	@Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         if( checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_DENIED )
         {
-        	showMessage("GpsWayPoints", "Berechtigung für Standort fehlt!", true);
         	return;
         }
 
@@ -452,25 +471,6 @@ public class GpsWayPointsActivity extends GpsActivity
 			Integer.toString(getNumLocations())
     	);
     }
-    private void showMessage( String title, String resultString, final boolean terminate )
-    {
-    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    	builder.setMessage(resultString)
-    		   .setTitle(title)
-    	       .setCancelable(false)
-    	       .setNegativeButton("Fertig", new DialogInterface.OnClickListener() {
-    	           public void onClick(DialogInterface dialog, int id) {
-    	                dialog.cancel();
-    	                if( terminate )
-    	                {
-    	                	finish();
-    	                }
-    	           }
-    	       })
-    	       .setIcon(R.drawable.icon);
-    	AlertDialog alert = builder.create();
-    	alert.show();
-    }
 
 	@Override
 	public void onLocationServiceOff() {
@@ -546,7 +546,7 @@ public class GpsWayPointsActivity extends GpsActivity
     	{
     		final double absHomeBearing = newLocation.bearingTo(m_home);
     		showMovement( 
-    			getCurSpeed(), 
+    			getSpeed(), 
     			m_home.distanceTo(newLocation), m_home.getAltitude()-newLocation.getAltitude(), 
     			absHomeBearing, getCurBearing() 
     		);
@@ -554,6 +554,11 @@ public class GpsWayPointsActivity extends GpsActivity
     	
     	setAltitude(newLocation);
     }
+
+	@Override
+	public void onPermissionError() {
+		showMessage("GpsWayPoints", "Berechtigung für Standort fehlt!", true);
+	}
 
 
 }
