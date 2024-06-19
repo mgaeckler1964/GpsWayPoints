@@ -15,14 +15,28 @@ public class GpsProcessor {
 	Queue<Location>			m_locationList = new LinkedList<Location>();
 	double					m_curBearing = 0;
 	double					m_speed = 0;
+	double					m_accel = 0;
+
+	public static long speedToKmh( double speedMs )
+	{
+		return (long)(speedMs * 3.6 + 0.5);
+	}
+	public static double speedToMs( long speedKmh )
+	{
+		return (double)speedKmh / 3.6;
+	}
 
 	public double getCurBearing()
 	{
 		return m_curBearing;
 	}
-	public double getCurSpeed()
+	public double getSpeed()
 	{
 		return m_speed;
+	}
+	public double getAccel()
+	{
+		return m_accel;
 	}
 	public double getAccuracy()
 	{
@@ -43,10 +57,12 @@ public class GpsProcessor {
 
 	public void onLocationChanged( Location newLocation )
     {
-		double	sDistance, elapsedTime;
+    	double	lastSpeed, elapsedTime;
+		double	sDistance;
     	
     	m_accuracy = newLocation.getAccuracy();
-
+    	lastSpeed = 0;
+    	
     	// calculate the current bearing
     	{
     		double sumBearing = 0;
@@ -132,12 +148,16 @@ public class GpsProcessor {
     	}
     	
     	if( elapsedTime > 0 && sDistance >= m_accuracy )
-    		m_speed = (sDistance / elapsedTime) * 3.6;
+    	{
+    		m_speed = sDistance / elapsedTime; 
+    		m_accel = (m_speed - lastSpeed)/elapsedTime;
+    	}
     	else if( newLocation.hasSpeed() )
-    		m_speed = newLocation.getSpeed() * 3.6;
+    		m_speed = newLocation.getSpeed();
     	else
     		m_speed = 0;
 
+    	newLocation.setSpeed((float)m_speed);
     	m_locationList.add(newLocation);
     }
 

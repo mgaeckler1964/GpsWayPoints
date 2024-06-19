@@ -15,11 +15,11 @@ import android.os.CountDownTimer;
 
 public abstract class GpsActivity extends Activity {
 
-	CountDownTimer			m_gpsTimer = null;
-	LocationManager			m_locationManager;
-	LocationListener		m_locationListener = null;
-	GpsStatus.Listener		m_gpsStatusListener;
-	GpsProcessor			m_processor = new GpsProcessor();
+	private CountDownTimer		m_gpsTimer = null;
+	private LocationManager		m_locationManager = null;
+	private LocationListener	m_locationListener = null;
+	private GpsStatus.Listener	m_gpsStatusListener = null;
+	private final GpsProcessor	m_processor = new GpsProcessor();
 
 	public abstract void onLocationEnabled();
 	public abstract void onLocationDisabled();
@@ -95,10 +95,17 @@ public abstract class GpsActivity extends Activity {
 	    m_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 50, (float) 0.1, m_locationListener);
 	    m_locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 50, (float) 0.1, m_locationListener);
 
-
-	    
-	    m_gpsTimer = new CountDownTimer(100000000, 1000) {
+	    createGpsTimer(1000);
+    }
 	
+	private void createGpsTimer( int interval )
+	{
+		if (m_gpsTimer!=null)
+		{
+			m_gpsTimer.cancel();
+		}
+	    m_gpsTimer = new CountDownTimer(100000000, interval) {
+	    	
 	    	private Location m_lastKnown=null;
 	
 	    	@Override
@@ -115,9 +122,7 @@ public abstract class GpsActivity extends Activity {
 	    		m_gpsTimer.start();
 	    	}
 		}.start();
-
-    }
-	
+	}
 	private final ReentrantLock m_lock = new ReentrantLock();
 	void lockLocationChanged( Location newLocation )
     {
@@ -171,8 +176,12 @@ public abstract class GpsActivity extends Activity {
 	{
 		return m_processor.getCurBearing();
 	}
-	public double getCurSpeed()
+	public double getSpeed()
 	{
-		return m_processor.getCurSpeed();
+		return m_processor.getSpeed();
+	}
+	public double getAccel()
+	{
+		return m_processor.getAccel();
 	}
 }
