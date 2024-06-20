@@ -36,6 +36,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	static final String CONFIGURATION_FILE = "GpsWayPoints.cfg";
 	static final String WAYPOINTS_FILE = "GpsWayPoints.gwp";
 	static final String	HOME_KEY = "homePosition";
+	static final String	GPS_SPEED_KEY = "gpsInterval";
 
 	static final String	CALIBRATION_KEY = "calibrationMode";
 	static final String	FIX_COUNT_KEY = "fixCount";
@@ -93,20 +94,23 @@ public class GpsWayPointsActivity extends GpsActivity
 
     	m_waypoints = getSharedPreferences(WAYPOINTS_FILE, 0);
 
-    	String homeStr = "";
+    	String homeStr;
+    	int gpsInterval;
     	if( savedInstanceState != null )
         {
-        	homeStr = savedInstanceState.getString(HOME_KEY);
-            m_locationFixCount = savedInstanceState.getLong(FIX_COUNT_KEY);
-            m_calibration = savedInstanceState.getBoolean(CALIBRATION_KEY);
-            m_sumLongitude = savedInstanceState.getDouble(SUM_LONGITUDE_KEY);
-            m_sumLatitude = savedInstanceState.getDouble(SUM_LATITUDE_KEY);
-            m_sumAltitude = savedInstanceState.getDouble(SUM_ALTITUDE_KEY);
+        	homeStr = savedInstanceState.getString(HOME_KEY,"");
+            m_locationFixCount = savedInstanceState.getLong(FIX_COUNT_KEY,0);
+            m_calibration = savedInstanceState.getBoolean(CALIBRATION_KEY,false);
+            m_sumLongitude = savedInstanceState.getDouble(SUM_LONGITUDE_KEY,0);
+            m_sumLatitude = savedInstanceState.getDouble(SUM_LATITUDE_KEY,0);
+            m_sumAltitude = savedInstanceState.getDouble(SUM_ALTITUDE_KEY,0);
+            gpsInterval = savedInstanceState.getInt(GPS_SPEED_KEY,0); 
         }
         else
         {
         	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, 0);
         	homeStr = settings.getString(HOME_KEY,"");
+            gpsInterval = settings.getInt(GPS_SPEED_KEY,0); 
         }
     	Location tmpLocation = locationString(homeStr);
     	if( tmpLocation != null )
@@ -118,6 +122,7 @@ public class GpsWayPointsActivity extends GpsActivity
         	m_home.setLongitude(14.282733);
         	m_home.setLatitude(48.298820);
     	}
+    	createGpsTimer(gpsInterval);
 
         PowerManager	pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         m_wakeLock = pm.newWakeLock( PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "GpsWayPoints" );
@@ -297,12 +302,19 @@ public class GpsWayPointsActivity extends GpsActivity
 		boolean hasWayPoints = m_waypoints!= null && m_waypoints.getAll().size() > 0;
 		menu.findItem(R.id.loadPos).setEnabled(hasWayPoints);
 		menu.findItem(R.id.deletePos).setEnabled(hasWayPoints);
+
 		boolean hasLocation = getHasLocation();
 		menu.findItem(R.id.savePos).setEnabled(hasLocation);
 		menu.findItem(R.id.savePosAs).setEnabled(hasLocation);
 
 		menu.findItem(R.id.calibration).setChecked(m_calibration);
 
+		int gpsInterval = getInterval();
+		menu.findItem(R.id.autoGps).setChecked(gpsInterval==AUTO_GPS);
+		menu.findItem(R.id.fastGps).setChecked(gpsInterval==FAST_GPS);
+		menu.findItem(R.id.normalGps).setChecked(gpsInterval==NORMAL_GPS);
+		menu.findItem(R.id.slowGps).setChecked(gpsInterval==SLOW_GPS);
+		
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -351,6 +363,19 @@ public class GpsWayPointsActivity extends GpsActivity
     		}
     		break;
 
+    	case R.id.autoGps:
+    		removeGpsTimer();
+    		break;
+    	case R.id.fastGps:
+    		createGpsTimer(FAST_GPS);
+    		break;
+    	case R.id.normalGps:
+    		createGpsTimer(NORMAL_GPS);
+    		break;
+    	case R.id.slowGps:
+    		createGpsTimer(SLOW_GPS);
+    		break;
+
     	case R.id.exit:
     		finish();
             break;
@@ -387,6 +412,7 @@ public class GpsWayPointsActivity extends GpsActivity
         SharedPreferences.Editor editor = settings.edit();
 
         editor.putString(HOME_KEY, locationString(m_home) );
+        editor.putInt(GPS_SPEED_KEY, getInterval() );
 
 		// Commit the edits!
         editor.commit();
@@ -416,6 +442,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		outState.putDouble(SUM_LONGITUDE_KEY, m_sumLongitude);
 		outState.putDouble(SUM_LATITUDE_KEY, m_sumLatitude);
 		outState.putDouble(SUM_ALTITUDE_KEY, m_sumAltitude);
+		outState.putInt(GPS_SPEED_KEY, getInterval());
 	}
 	
 	// correction valid for Linz/Austria

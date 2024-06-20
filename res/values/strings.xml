@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GpsWayPoints</string>
-    <string name="app_version">2.6.19</string>
+    <string name="app_version">2.6.20</string>
     
     <string name="savePos">Standort speichern</string>
     <string name="savePosAs">Standort mit Namen speichern &#8230;</string>
     <string name="loadPos">Standort laden &#8230;</string>
     <string name="deletePos">Standort löschen &#8230;</string>
+    <string name="gpsSpeed">GPS Intervall</string>
+    <string name="gpsSpeedAuto">Automatik</string>
     <string name="calibration">Kalibrierung</string>
     
     <string name="about">Info</string>
