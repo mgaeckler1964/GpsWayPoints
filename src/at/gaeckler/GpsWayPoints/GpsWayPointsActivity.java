@@ -30,6 +30,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import at.gaeckler.gps.GpsActivity;
+import at.gaeckler.gps.GpsProcessor;
 
 public class GpsWayPointsActivity extends GpsActivity
 {
@@ -37,6 +38,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	static final String WAYPOINTS_FILE = "GpsWayPoints.gwp";
 	static final String	HOME_KEY = "homePosition";
 	static final String	GPS_SPEED_KEY = "gpsInterval";
+	static final String	LAST_NAME_KEY = "lastName";
 
 	static final String	CALIBRATION_KEY = "calibrationMode";
 	static final String	FIX_COUNT_KEY = "fixCount";
@@ -59,6 +61,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	private DecimalFormat	m_accuracyFormat = new DecimalFormat( "Genauigkeit: 0.000m" );
 	PowerManager.WakeLock	m_wakeLock;
 	
+	String 					m_lastName = null;
 	Location				m_home = new Location("");
 	SharedPreferences 		m_waypoints = null;
 	
@@ -99,6 +102,7 @@ public class GpsWayPointsActivity extends GpsActivity
     	if( savedInstanceState != null )
         {
         	homeStr = savedInstanceState.getString(HOME_KEY,"");
+        	m_lastName = savedInstanceState.getString(LAST_NAME_KEY,"");
             m_locationFixCount = savedInstanceState.getLong(FIX_COUNT_KEY,0);
             m_calibration = savedInstanceState.getBoolean(CALIBRATION_KEY,false);
             m_sumLongitude = savedInstanceState.getDouble(SUM_LONGITUDE_KEY,0);
@@ -110,6 +114,8 @@ public class GpsWayPointsActivity extends GpsActivity
         {
         	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, 0);
         	homeStr = settings.getString(HOME_KEY,"");
+        	m_lastName = settings.getString(LAST_NAME_KEY,"");
+        	
             gpsInterval = settings.getInt(GPS_SPEED_KEY,0); 
         }
     	Location tmpLocation = locationString(homeStr);
@@ -183,6 +189,10 @@ public class GpsWayPointsActivity extends GpsActivity
 
 
     	final EditText positionName = (EditText) view.findViewById(R.id.positionName);
+    	if (m_lastName != null)
+    	{
+    		positionName.setText(m_lastName);
+    	}
 
     	alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
     	    @Override
@@ -198,6 +208,8 @@ public class GpsWayPointsActivity extends GpsActivity
     	        	SharedPreferences.Editor editor = m_waypoints.edit();
     	            editor.putString(homeName, homeStr );
     	            editor.commit();
+    	            
+    	            m_lastName = homeName;
 
     	        	alertDialog.dismiss();
     			}
@@ -267,6 +279,7 @@ public class GpsWayPointsActivity extends GpsActivity
 				}
 				else if( mode == SelectorMode.LOAD_POS)
 				{
+					m_lastName = viewItem;
 					m_home = locationString(m_waypoints.getString(viewItem, ""));
 				}
 
@@ -412,6 +425,8 @@ public class GpsWayPointsActivity extends GpsActivity
         SharedPreferences.Editor editor = settings.edit();
 
         editor.putString(HOME_KEY, locationString(m_home) );
+        editor.putString(LAST_NAME_KEY, m_lastName);
+
         editor.putInt(GPS_SPEED_KEY, getInterval() );
 
 		// Commit the edits!
@@ -437,6 +452,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	protected void  onSaveInstanceState (Bundle outState)
 	{
 		outState.putString(HOME_KEY, locationString(m_home));
+		outState.putString(LAST_NAME_KEY, m_lastName);
 		outState.putLong(FIX_COUNT_KEY, m_locationFixCount);
 		outState.putBoolean(CALIBRATION_KEY, m_calibration);
 		outState.putDouble(SUM_LONGITUDE_KEY, m_sumLongitude);
@@ -479,7 +495,7 @@ public class GpsWayPointsActivity extends GpsActivity
     void showMovement( double speed, double distanceDM, double distanceHM, double absHomeBearing, double currBearing )
     {
     	m_theRose.showMovement(
-    		speed, 
+    		GpsProcessor.speedToKmh(speed), 
     		(int)(distanceDM+0.5), (int)(distanceHM+0.5), 
     		absHomeBearing, currBearing 
     	);

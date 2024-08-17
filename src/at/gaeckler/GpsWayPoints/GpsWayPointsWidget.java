@@ -31,7 +31,7 @@ public class GpsWayPointsWidget extends View
 {
 	private int m_kompassWidth = 0, m_kompassHeight = 0;
 	private double m_centerX = 0, m_centerY = 0, m_kompassRadius = 0;
-	private double m_currentSpeed = 0;
+	private long m_currentSpeed = 0;
 	private double m_absHomeBearing = 0;
 	private double m_currBearing = 0;
 	private int m_distanceDM = 0;
@@ -179,7 +179,7 @@ public class GpsWayPointsWidget extends View
     	);
     }
 
-	public void showMovement( double newSpeed, int distanceDM, int distanceHM, double absHomeBearing, double currBearing )
+	public void showMovement( long newSpeed, int distanceDM, int distanceHM, double absHomeBearing, double currBearing )
 	{
 		m_currentSpeed = newSpeed;
 		m_distanceDM = distanceDM;
