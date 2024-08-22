@@ -151,7 +151,7 @@ public class GpsWayPointsActivity extends GpsActivity
         System.out.println("showSpeed");
         clearMovementDisplay();
 
-        //onLocationChanged2(m_home);
+        //simulateLocationFix(m_home);
 	}
 
 	String locationString( Location src )
@@ -194,28 +194,73 @@ public class GpsWayPointsActivity extends GpsActivity
     		positionName.setText(m_lastName);
     	}
 
+    	final EditText positionLongitude = (EditText) view.findViewById(R.id.positionLongitude);
+    	final EditText positionLatitude = (EditText) view.findViewById(R.id.positionLatitude);
+    	final EditText positionAltitude = (EditText) view.findViewById(R.id.positionAltitude);
+
     	alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
     	    @Override
     	    public void onClick(DialogInterface dialog, int which) {
 
     			try
     			{
-    				m_home = lastLocation;
-
     	        	String homeName = positionName.getText().toString();
-    	        	String homeStr = locationString(m_home);
+    	        	if ( homeName != null && homeName.length()>0 )
+    	        	{
+        				m_home = lastLocation;
+        				
+        				{
+	        				String homeLongitude = positionLongitude.getText().toString();
+	        				if( homeLongitude != null && homeLongitude.length() > 0 )
+	        				{
+	        					double longitude = Double.parseDouble(homeLongitude);
+	        					if (longitude < -180 || longitude > 180 )
+	        					{
+	        						throw new NumberFormatException();   
+	        					}
+	        					m_home.setLongitude(longitude);
+	        				}
+        				}
 
-    	        	SharedPreferences.Editor editor = m_waypoints.edit();
-    	            editor.putString(homeName, homeStr );
-    	            editor.commit();
-    	            
-    	            m_lastName = homeName;
+        				{
+	        				String homeLatitude = positionLatitude.getText().toString();
+	        				if( homeLatitude != null && homeLatitude.length() > 0 )
+	        				{
+	        					double latitude = Double.parseDouble(homeLatitude);
+	        					if (latitude < -90 || latitude > 90 )
+	        					{
+	        						throw new NumberFormatException();   
+	        					}
+	        					m_home.setLatitude(latitude);
+	        				}
+        				}
 
-    	        	alertDialog.dismiss();
+        				{
+	        				String homeAltitude = positionAltitude.getText().toString();
+	        				if( homeAltitude != null && homeAltitude.length() > 0 )
+	        				{
+	        					double altitude = Double.parseDouble(homeAltitude);
+	        					if (altitude < -11000 || altitude > 9000 )
+	        					{
+	        						throw new NumberFormatException();   
+	        					}
+	        					m_home.setAltitude(altitude);
+	        				}
+        				}
+
+        	        	String homeStr = locationString(m_home);
+
+        	        	SharedPreferences.Editor editor = m_waypoints.edit();
+        	            editor.putString(homeName, homeStr );
+        	            editor.commit();
+        	            
+        	            m_lastName = homeName;
+
+        	        	alertDialog.dismiss();
+    	        	}
     			}
     			catch (NumberFormatException e)
     			{
-    				// ignore, don't change speed
     			}
     	    }
     	});
@@ -570,7 +615,6 @@ public class GpsWayPointsActivity extends GpsActivity
 				Integer.toString(Satellites)
 			);
 		}
-		
 	}
 
 	@Override
