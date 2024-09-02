@@ -49,6 +49,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	GpsWayPointsWidget		m_theRose = null;
 	TextView				m_statusView = null;
 	TextView				m_altitudeView = null;
+	TextView				m_waypointNameView = null;
 	double					m_homeBearing = 0;
 	
 	String					m_myStatus = "Willkommen";
@@ -146,11 +147,12 @@ public class GpsWayPointsActivity extends GpsActivity
     	setStatus( m_myStatus );
     	m_theRose = (GpsWayPointsWidget)findViewById( R.id.myRose );
     	m_altitudeView = (TextView)findViewById( R.id.altitudeView );
-
+    	m_waypointNameView = (TextView)findViewById( R.id.waypointNameView );
 
         System.out.println("showSpeed");
         clearMovementDisplay();
 
+        updateWaypointName();
         //simulateLocationFix(m_home);
 	}
 
@@ -255,6 +257,7 @@ public class GpsWayPointsActivity extends GpsActivity
         	            editor.commit();
         	            
         	            m_lastName = homeName;
+        	            updateWaypointName();
 
         	        	alertDialog.dismiss();
     	        	}
@@ -325,6 +328,7 @@ public class GpsWayPointsActivity extends GpsActivity
 				else if( mode == SelectorMode.LOAD_POS)
 				{
 					m_lastName = viewItem;
+			        updateWaypointName();
 					m_home = locationString(m_waypoints.getString(viewItem, ""));
 				}
 
@@ -558,6 +562,10 @@ public class GpsWayPointsActivity extends GpsActivity
 			Long.toString(m_locationFixCount) + '/' +
 			Integer.toString(getNumLocations())
     	);
+    }
+    void updateWaypointName()
+    {
+    	m_waypointNameView.setText(m_lastName);
     }
 
 	@Override

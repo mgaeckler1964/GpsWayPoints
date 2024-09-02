@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="at.gaeckler.GpsWayPoints"
-      android:versionName="@string/app_version" android:versionCode="4">
+      android:versionName="@string/app_version" android:versionCode="5">
     <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="23"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
