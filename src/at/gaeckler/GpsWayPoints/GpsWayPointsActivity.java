@@ -128,6 +128,7 @@ public class GpsWayPointsActivity extends GpsActivity
     	{
         	m_home.setLongitude(14.282733);
         	m_home.setLatitude(48.298820);
+        	setCorrectedAltitude(m_home, 260);
     	}
     	createGpsTimer(gpsInterval);
 
@@ -169,10 +170,17 @@ public class GpsWayPointsActivity extends GpsActivity
 		if(elements.length < 3 || elements.length > 4) {
 			return null;
 		}
+		String provider = elements[0];
+		double longitude = Double.parseDouble(elements[1]);
+		double latitude = Double.parseDouble(elements[2]);
 		
-		Location newLocation = new Location(elements[0]);
-		newLocation.setLongitude(Double.parseDouble(elements[1]));
-		newLocation.setLatitude(Double.parseDouble(elements[2]));
+		if( Math.abs(longitude) < 0.01 && Math.abs(latitude) < 0.01)
+		{
+			return null;
+		}
+		Location newLocation = new Location(provider);
+		newLocation.setLongitude(longitude);
+		newLocation.setLatitude(latitude);
 		if (elements.length == 4) {
 			newLocation.setAltitude(Double.parseDouble(elements[3]));;
 		}
@@ -246,7 +254,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	        					{
 	        						throw new NumberFormatException();   
 	        					}
-	        					m_home.setAltitude(altitude);
+	        					setCorrectedAltitude( m_home, altitude );
 	        				}
         				}
 
@@ -264,6 +272,7 @@ public class GpsWayPointsActivity extends GpsActivity
     			}
     			catch (NumberFormatException e)
     			{
+    				// stop processing the input
     			}
     	    }
     	});
@@ -511,9 +520,13 @@ public class GpsWayPointsActivity extends GpsActivity
 	}
 	
 	// correction valid for Linz/Austria
-	private int getCorrectedAltidute( Location loc)
+	static private int getCorrectedAltidute( Location loc )
 	{
 		return (int)loc.getAltitude()-50;
+	}
+	static void setCorrectedAltitude( Location loc, double altitude )
+	{
+		loc.setAltitude(altitude+50);
 	}
 	
 	private void setAltitude( Location newLocation )
