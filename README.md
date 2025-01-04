@@ -6,21 +6,21 @@ Punkt auf der Erde.
 Wenn Du Deine augenblickliche Position speicherst, zeigt Dir das Programm immer 
 die Richtung und die Entfernung in Meter zu diesem Punkt an.
 
-Du kannst auch deine aktuelle Position mit einem Namen speichern, so daﬂ sie 
+Du kannst auch deine aktuelle Position mit einem Namen speichern, so da√ü sie 
 auch dann erhalten bleibt, wenn Du eine neue Position speicherst.
 
-Bei einigen Androidversionen kann es vorkommen, daﬂ ihr die Berechtigung zum 
-Ermitteln des Standorts manuel vergeben m¸ﬂt. Andernfalls beendet das Programm 
+Bei einigen Androidversionen kann es vorkommen, da√ü ihr die Berechtigung zum 
+Ermitteln des Standorts manuel vergeben m√º√üt. Andernfalls beendet das Programm 
 sofort mit einem Fehler.
 
-Zum ‹bersetzen der Quellen habe ich Android Developer Tools v22.6.2-1085508 
+Zum √úbersetzen der Quellen habe ich Android Developer Tools v22.6.2-1085508 
 verwendet. Das gebaute Package kann hier
 
 https://www.gaeckler.at/Software/software.htm (in Wien)
 
 oder hier
 
-https://www.g‰ckler.de/Software/software.htm (in Deutschland)
+https://www.g√§ckler.de/Software/software.htm (in Deutschland)
 
 geladen werden.
 
@@ -33,4 +33,7 @@ https://www.gaeckler.at/Software/software.htm (in Vienna)
 
 or
 
-http://www.g‰ckler.de/Software/software.htm (in Germany)
+http://www.g√§ckler.de/Software/software.htm (in Germany)
+
+## Screenshot
+![screen](https://github.com/user-attachments/assets/21f372d9-054c-48fd-99f3-a3dac5b45f67)
