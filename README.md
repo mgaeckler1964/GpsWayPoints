@@ -16,7 +16,7 @@ sofort mit einem Fehler.
 Zum Übersetzen der Quellen habe ich Android Developer Tools v22.6.2-1085508 
 verwendet. Das gebaute Package kann hier
 
-https://www.gaeckler.at/Software/software#GpsWayPoints.htm (in Wien)
+https://www.gaeckler.at/Software/software.htm#GpsWayPoints (in Wien)
 
 oder hier
 
