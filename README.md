@@ -16,11 +16,11 @@ sofort mit einem Fehler.
 Zum Übersetzen der Quellen habe ich Android Developer Tools v22.6.2-1085508 
 verwendet. Das gebaute Package kann hier
 
-https://www.gaeckler.at/Software/software.htm (in Wien)
+https://www.gaeckler.at/Software/software#GpsWayPoints.htm (in Wien)
 
 oder hier
 
-https://www.gäckler.de/Software/software.htm (in Deutschland)
+https://www.gäckler.de/Software/software.htm#GpsWayPoints (in Deutschland)
 
 geladen werden.
 
@@ -29,11 +29,11 @@ geladen werden.
 To build the package I used Android Developer Tools v22.6.2-1085508. The 
 compiled package can be downloaded from
 
-https://www.gaeckler.at/Software/software.htm (in Vienna)
+https://www.gaeckler.at/Software/software.htm#GpsWayPoints (in Vienna)
 
 or
 
-http://www.gäckler.de/Software/software.htm (in Germany)
+http://www.gäckler.de/Software/software.htm#GpsWayPoints (in Germany)
 
 ## Screenshot
 ![screen](https://github.com/user-attachments/assets/21f372d9-054c-48fd-99f3-a3dac5b45f67)
