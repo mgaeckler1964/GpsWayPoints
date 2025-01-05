@@ -20,7 +20,7 @@ https://www.gaeckler.at/Software/software.htm#GpsWayPoints (in Wien)
 
 oder hier
 
-https://www.gäckler.de/Software/software.htm#GpsWayPoints (in Deutschland)
+http://www.gäckler.de/Software/software.htm#GpsWayPoints (in Deutschland)
 
 geladen werden.
 
