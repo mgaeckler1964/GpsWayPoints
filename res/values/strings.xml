@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GpsWayPoints</string>
-    <string name="app_version">3.1.4</string>
+    <string name="app_version">3.2.9</string>
     
     <string name="savePos">Standort speichern</string>
     <string name="savePosAs">Standort mit Namen speichern &#8230;</string>
@@ -10,7 +10,8 @@
     <string name="gpsSpeed">GPS Intervall</string>
     <string name="gpsSpeedAuto">Automatik</string>
     <string name="calibration">Kalibrierung</string>
-    
+    <string name="darkMode">Darkmode</string>
+
     <string name="about">Info</string>
     <string name="exit">Beenden</string>
     

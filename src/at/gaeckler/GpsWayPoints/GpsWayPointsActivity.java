@@ -39,13 +39,16 @@ public class GpsWayPointsActivity extends GpsActivity
 	static final String	HOME_KEY = "homePosition";
 	static final String	GPS_SPEED_KEY = "gpsInterval";
 	static final String	LAST_NAME_KEY = "lastName";
+	static final String	DARK_MODE_KEY = "darkMode";
 
 	static final String	CALIBRATION_KEY = "calibrationMode";
 	static final String	FIX_COUNT_KEY = "fixCount";
 	static final String	SUM_LONGITUDE_KEY = "sumLongitude";
 	static final String	SUM_LATITUDE_KEY = "sumLatitude";
 	static final String	SUM_ALTITUDE_KEY = "sumAltitude";
-	
+
+	boolean					m_darkMode = false;
+
 	GpsWayPointsWidget		m_theRose = null;
 	TextView				m_statusView = null;
 	TextView				m_altitudeView = null;
@@ -86,6 +89,18 @@ public class GpsWayPointsActivity extends GpsActivity
     	alert.show();
     }
 
+    private void switchColorMode()
+    {
+        if( m_darkMode )
+        {
+        	m_theRose.useBlackBackground();
+        }
+        else
+        {
+        	m_theRose.useWhiteBackground();
+        }
+    }
+
     /** Called when the activity is first created. */
 	@Override
     public void onCreate(Bundle savedInstanceState)
@@ -109,6 +124,7 @@ public class GpsWayPointsActivity extends GpsActivity
             m_sumLongitude = savedInstanceState.getDouble(SUM_LONGITUDE_KEY,0);
             m_sumLatitude = savedInstanceState.getDouble(SUM_LATITUDE_KEY,0);
             m_sumAltitude = savedInstanceState.getDouble(SUM_ALTITUDE_KEY,0);
+            m_darkMode = savedInstanceState.getBoolean(DARK_MODE_KEY,false);
             gpsInterval = savedInstanceState.getInt(GPS_SPEED_KEY,0); 
         }
         else
@@ -116,7 +132,7 @@ public class GpsWayPointsActivity extends GpsActivity
         	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, 0);
         	homeStr = settings.getString(HOME_KEY,"");
         	m_lastName = settings.getString(LAST_NAME_KEY,"");
-        	
+        	m_darkMode = settings.getBoolean(DARK_MODE_KEY,false);
             gpsInterval = settings.getInt(GPS_SPEED_KEY,0); 
         }
     	Location tmpLocation = locationString(homeStr);
@@ -155,6 +171,7 @@ public class GpsWayPointsActivity extends GpsActivity
 
         updateWaypointName();
         //simulateLocationFix(m_home);
+        switchColorMode();
 	}
 
 	String locationString( Location src )
@@ -379,6 +396,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		menu.findItem(R.id.savePosAs).setEnabled(hasLocation);
 
 		menu.findItem(R.id.calibration).setChecked(m_calibration);
+		menu.findItem(R.id.darkMode).setChecked(m_darkMode);
 
 		int gpsInterval = getInterval();
 		menu.findItem(R.id.autoGps).setChecked(gpsInterval==AUTO_GPS);
@@ -446,7 +464,11 @@ public class GpsWayPointsActivity extends GpsActivity
     	case R.id.slowGps:
     		createGpsTimer(SLOW_GPS);
     		break;
-
+    	case R.id.darkMode:
+    		m_darkMode = !m_darkMode;
+            switchColorMode();
+            break;
+    		
     	case R.id.exit:
     		finish();
             break;
@@ -484,7 +506,7 @@ public class GpsWayPointsActivity extends GpsActivity
 
         editor.putString(HOME_KEY, locationString(m_home) );
         editor.putString(LAST_NAME_KEY, m_lastName);
-
+        editor.putBoolean(DARK_MODE_KEY, m_darkMode);
         editor.putInt(GPS_SPEED_KEY, getInterval() );
 
 		// Commit the edits!
@@ -517,6 +539,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		outState.putDouble(SUM_LATITUDE_KEY, m_sumLatitude);
 		outState.putDouble(SUM_ALTITUDE_KEY, m_sumAltitude);
 		outState.putInt(GPS_SPEED_KEY, getInterval());
+		outState.putBoolean(DARK_MODE_KEY, m_darkMode);
 	}
 	
 	// correction valid for Linz/Austria

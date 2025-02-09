@@ -44,10 +44,18 @@ public class GpsWayPointsWidget extends View
 	private static final DecimalFormat s_speedFormat = new DecimalFormat( "0.0 km/h" );
 	private static final DecimalFormat s_totalDistanceFormat = new DecimalFormat( ",##0" );
 
+	private static final int blackColor = 0xFF000000;
+	private static final int whiteColor = 0xFFFFFFFF;
+	private static int backGroundCol = whiteColor;
+	private static int foreGroundCol = blackColor;
+	private static final int homeNeedleCol = 0xFFFF0000;
+	private static final int wayNeedleCol = 0xFF00FF00;
+	private static final int speedCol = 0xFF0000FF;
 	private void initKompass()
 	{
+		setBackgroundColor(backGroundCol);
 		m_kompassPaint = new Paint();
-		m_kompassPaint.setARGB(255, 0, 0, 0);
+		m_kompassPaint.setColor(foreGroundCol);
 		m_kompassPaint.setStyle(Paint.Style.STROKE);
 		m_kompassPaint.setTextAlign(Paint.Align.CENTER);
 		m_kompassPaint.setAntiAlias( true );
@@ -60,15 +68,22 @@ public class GpsWayPointsWidget extends View
 		m_homeNeedlePaint.set( m_kompassPaint );
 		m_homeNeedlePaint.setStrokeWidth(20);
 		m_homeNeedlePaint.setStrokeCap(Paint.Cap.ROUND);
-		m_homeNeedlePaint.setARGB(255, 255, 0, 0);
+		m_homeNeedlePaint.setColor(homeNeedleCol);
 
 		m_wayNeedlePaint = new Paint();
 		m_wayNeedlePaint.set( m_homeNeedlePaint );
-		m_wayNeedlePaint.setARGB(255, 0, 255, 0);
+		m_wayNeedlePaint.setColor(wayNeedleCol);
 
 		m_speedPaint = new Paint();
 		m_speedPaint.set( m_labelPaint );
-		m_speedPaint.setARGB(255, 0, 0, 255);
+		m_speedPaint.setColor(speedCol);
+		
+		if( m_kompassRadius > 0 )
+		{
+			m_labelPaint.setTextSize((float)(m_kompassRadius * 0.1));
+			m_speedPaint.setTextSize((float)(m_kompassRadius * 0.25));
+		}
+
 	}
 
 	private double getAngleRad( double bearingDeg )
@@ -167,7 +182,6 @@ public class GpsWayPointsWidget extends View
 	        );
         }
 
-
     	textOffset = m_speedPaint.getTextSize();
     	canvas.drawText(s_speedFormat.format(m_currentSpeed), (float)m_centerX, (float)(m_centerY+textOffset), m_speedPaint);
 
@@ -195,6 +209,20 @@ public class GpsWayPointsWidget extends View
 		m_distanceHM = 0;
 		m_absHomeBearing = 0;
 		m_currBearing = 0;
+		invalidate();
+	}
+	public void useBlackBackground()
+	{
+		backGroundCol = blackColor;
+		foreGroundCol = whiteColor;
+		initKompass();
+		invalidate();
+	}
+	public void useWhiteBackground()
+	{
+		backGroundCol = whiteColor;
+		foreGroundCol = blackColor;
+		initKompass();
 		invalidate();
 	}
 }
