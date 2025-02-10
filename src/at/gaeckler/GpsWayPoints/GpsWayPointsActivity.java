@@ -1,5 +1,12 @@
 package at.gaeckler.GpsWayPoints;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +23,7 @@ import android.location.GpsStatus;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.PowerManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,11 +49,15 @@ public class GpsWayPointsActivity extends GpsActivity
 	static final String	LAST_NAME_KEY = "lastName";
 	static final String	DARK_MODE_KEY = "darkMode";
 
+	static final String	NAME_KEY = "name";
+
 	static final String	CALIBRATION_KEY = "calibrationMode";
 	static final String	FIX_COUNT_KEY = "fixCount";
 	static final String	SUM_LONGITUDE_KEY = "sumLongitude";
 	static final String	SUM_LATITUDE_KEY = "sumLatitude";
 	static final String	SUM_ALTITUDE_KEY = "sumAltitude";
+	private static final String s_filenameExternalPublic = "gpsWayPointsPub.txt";
+	private static final String s_filenameExternalPrivate = "gpsWayPointsPriv.txt";
 
 	boolean					m_darkMode = false;
 
@@ -105,13 +117,13 @@ public class GpsWayPointsActivity extends GpsActivity
 	@Override
     public void onCreate(Bundle savedInstanceState)
     {
-        super.onCreate(savedInstanceState);
+		super.onCreate(savedInstanceState);
         if( checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_DENIED )
         {
         	return;
         }
 
-    	m_waypoints = getSharedPreferences(WAYPOINTS_FILE, 0);
+    	m_waypoints = getSharedPreferences(WAYPOINTS_FILE, Context.MODE_PRIVATE);
 
     	String homeStr;
     	int gpsInterval;
@@ -129,7 +141,7 @@ public class GpsWayPointsActivity extends GpsActivity
         }
         else
         {
-        	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, 0);
+        	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
         	homeStr = settings.getString(HOME_KEY,"");
         	m_lastName = settings.getString(LAST_NAME_KEY,"");
         	m_darkMode = settings.getBoolean(DARK_MODE_KEY,false);
@@ -174,17 +186,18 @@ public class GpsWayPointsActivity extends GpsActivity
         switchColorMode();
 	}
 
-	String locationString( Location src )
+	private String locationString( Location src )
 	{
 		return src.getProvider() + '|' + 
 				Double.toString(src.getLongitude()) + '|' + 
 				Double.toString(src.getLatitude()) + '|' +
 				Double.toString(src.getAltitude());  
 	}
-	Location locationString( String src )
+	
+	private Location locationString( String src )
 	{
 		String [] elements = src.split("[|]");
-		if(elements.length < 3 || elements.length > 4) {
+		if(elements.length < 3) {
 			return null;
 		}
 		String provider = elements[0];
@@ -198,8 +211,14 @@ public class GpsWayPointsActivity extends GpsActivity
 		Location newLocation = new Location(provider);
 		newLocation.setLongitude(longitude);
 		newLocation.setLatitude(latitude);
-		if (elements.length == 4) {
+		if (elements.length >= 4) {
 			newLocation.setAltitude(Double.parseDouble(elements[3]));;
+		}
+		if (elements.length >= 5) {
+			String name = elements[4];
+			Bundle bundle = new Bundle();
+			bundle.putString(NAME_KEY, name);
+			newLocation.setExtras(bundle);
 		}
 		return newLocation;  
 	}
@@ -438,6 +457,68 @@ public class GpsWayPointsActivity extends GpsActivity
         	}
         	break;
     	}
+    	case R.id.saveGpx:
+    	{
+    		int itemsSaved = 0;
+    		String target="Public";
+    		try
+    		{
+    			itemsSaved = saveWaypointFile(true);
+    		}
+    		catch( Exception e )
+    		{
+				String str=e.toString();
+				System.out.println(str);
+    			try
+    			{
+    				target="Private";
+    				itemsSaved = saveWaypointFile(false);
+    			}
+    			catch( Exception e2 )
+    			{
+    				String str2=e2.toString();
+    				System.out.println(str2);
+    			}
+    		}
+    		String name = getString(R.string.app_name);
+    		showMessage(
+    			name, 
+    			Integer.toString(itemsSaved)+" items saved to " + target,
+    			false
+    		);
+    		break;
+    	}
+    	case R.id.loadGpx:
+    	{
+    		int itemsLoaded = 0;
+    		String source="Public";
+    		try
+    		{
+    			itemsLoaded = loadWaypointFile(true);
+    		}
+    		catch( Exception e)
+    		{
+				String str=e.toString();
+				System.out.println(str);
+    			try
+    			{
+    				itemsLoaded = loadWaypointFile(false);
+    				source="Private";
+    			}
+    			catch( Exception e2 )
+    			{
+    				String str2=e2.toString();
+    				System.out.println(str2);
+    			}
+    		}
+    		String name = getString(R.string.app_name);
+    		showMessage(
+    			name, 
+    			Integer.toString(itemsLoaded)+" items loaded from " + source,
+    			false
+    		);
+    		break;
+    	}
     	case R.id.calibration:
     		if( !m_calibration )
     		{
@@ -498,10 +579,109 @@ public class GpsWayPointsActivity extends GpsActivity
             invalidateOptionsMenu();
         }
     }
+
+    private File getExternalFileName( boolean pub )
+    {
+        File dir = pub 
+        		? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) 
+        		: getExternalFilesDir(null);
+
+        System.out.println(dir.getPath());
+        if( !dir.exists() )
+        {
+        	dir.mkdir();
+        }
+        File file = new File(dir, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
+        System.out.println(file.getPath());
+        
+        return file;
+    }
+
+    private int loadWaypointFile(boolean pub) throws Exception
+    {
+    	int itemsLoaded = 0;
+        //Checking the availability state of the External Storage.
+        String state = Environment.getExternalStorageState();
+        if (!Environment.MEDIA_MOUNTED.equals(state)) 
+        {
+            //If it isn't mounted - we can't write into it.
+            System.out.println("Not mounted");
+            return 0;
+        }
+
+        File file = getExternalFileName(pub);
+
+        if( !file.exists() )
+        {
+        	throw new FileNotFoundException( file.getPath() );
+        }
+        FileInputStream inputStream = new FileInputStream(file);
+        Reader reader = new InputStreamReader ( inputStream );
+        BufferedReader buffer = new BufferedReader ( reader );
+    	SharedPreferences.Editor editor = m_waypoints.edit();
+
+        while( true )
+        {
+        	String text = buffer.readLine();
+        	if( text == null )
+        	{
+        		break;
+        	}
+        	Location loc = locationString(text);
+        	Bundle bundle = loc.getExtras();
+        	String name = bundle.getString(NAME_KEY);
+            editor.putString(name, locationString(loc) );
+            ++itemsLoaded;
+        };
+        editor.commit();
+        buffer.close();
+        
+        return itemsLoaded;
+    }
+
+	private int saveWaypointFile(boolean pub) throws Exception
+   	{
+		int itemsSaved=0;
+        //Checking the availability state of the External Storage.
+        String state = Environment.getExternalStorageState();
+        if (!Environment.MEDIA_MOUNTED.equals(state)) 
+        {
+            //If it isn't mounted - we can't write into it.
+            System.out.println("Not mounted");
+            return 0;
+        }
+
+        //Create a new file that points to the root directory, with the given name:
+        File file = getExternalFileName(pub);
+
+        //This point and below is responsible for the write operation
+        FileOutputStream outputStream = null;
+
+        file.createNewFile();
+        //second argument of FileOutputStream constructor indicates whether
+        //to append or create new file if one exists
+        outputStream = new FileOutputStream(file, false);
+
+    	Map<String,?> map = m_waypoints.getAll();
+    	Set<String> keys = map.keySet();
+    	for( String key : keys )
+    	{
+            outputStream.write(map.get(key).toString().getBytes());
+            outputStream.write('|');
+            outputStream.write(key.getBytes());
+            outputStream.write(13);
+            ++itemsSaved;
+    	}
+
+        outputStream.flush();
+        outputStream.close();
+        
+        return itemsSaved;
+    }
     
     private void saveSharedPreferences()
     {
-    	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, 0);
+    	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = settings.edit();
 
         editor.putString(HOME_KEY, locationString(m_home) );

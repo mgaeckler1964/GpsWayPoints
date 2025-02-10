@@ -3,8 +3,10 @@
       package="at.gaeckler.GpsWayPoints"
       android:versionName="@string/app_version" android:versionCode="5">
     <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="23"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application android:icon="@drawable/icon" android:label="@string/app_name" android:allowBackup="true" android:enabled="true" android:allowClearUserData="true" android:supportsRtl="false" android:theme="@android:style/Theme.WithActionBar" android:persistent="true">
         <activity android:name="at.gaeckler.GpsWayPoints.GpsWayPointsActivity"
