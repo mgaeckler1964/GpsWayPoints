@@ -194,7 +194,7 @@ public class GpsWayPointsActivity extends GpsActivity
 				Double.toString(src.getAltitude());  
 	}
 	
-	private Location locationString( String src )
+	Location locationString( String src )
 	{
 		String [] elements = src.split("[|]");
 		if(elements.length < 3) {
@@ -305,6 +305,7 @@ public class GpsWayPointsActivity extends GpsActivity
 
         	        	alertDialog.dismiss();
     	        	}
+    	        	onLocationChanged(lastLocation);
     			}
     			catch (NumberFormatException e)
     			{
@@ -375,6 +376,7 @@ public class GpsWayPointsActivity extends GpsActivity
 					m_lastName = viewItem;
 			        updateWaypointName();
 					m_home = locationString(m_waypoints.getString(viewItem, ""));
+					onLocationChanged(getLastLocation());
 				}
 
 				alertDialog.dismiss();
@@ -454,6 +456,7 @@ public class GpsWayPointsActivity extends GpsActivity
         	if (lastLocation != null)
         	{
         		m_home = lastLocation;
+        		onLocationChanged(lastLocation);
         	}
         	break;
     	}
