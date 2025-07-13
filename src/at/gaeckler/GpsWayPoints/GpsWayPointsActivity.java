@@ -42,44 +42,45 @@ import at.gaeckler.gps.GpsProcessor;
 
 public class GpsWayPointsActivity extends GpsActivity
 {
-	static final String CONFIGURATION_FILE = "GpsWayPoints.cfg";
-	static final String WAYPOINTS_FILE = "GpsWayPoints.gwp";
-	static final String	HOME_KEY = "homePosition";
-	static final String	GPS_SPEED_KEY = "gpsInterval";
-	static final String	LAST_NAME_KEY = "lastName";
-	static final String	DARK_MODE_KEY = "darkMode";
+	private static final String CONFIGURATION_FILE = "GpsWayPoints.cfg";
+	private static final String WAYPOINTS_FILE = "GpsWayPoints.gwp";
+	private static final String	HOME_KEY = "homePosition";
+	private static final String	GPS_SPEED_KEY = "gpsInterval";
+	private static final String	LAST_NAME_KEY = "lastName";
+	private static final String	DARK_MODE_KEY = "darkMode";
 
-	static final String	NAME_KEY = "name";
+	private static final String	NAME_KEY = "name";
 
-	static final String	CALIBRATION_KEY = "calibrationMode";
-	static final String	FIX_COUNT_KEY = "fixCount";
-	static final String	SUM_LONGITUDE_KEY = "sumLongitude";
-	static final String	SUM_LATITUDE_KEY = "sumLatitude";
-	static final String	SUM_ALTITUDE_KEY = "sumAltitude";
+	private static final String	CALIBRATION_KEY = "calibrationMode";
+	private static final String	FIX_COUNT_KEY = "fixCount";
+	private static final String	SUM_LONGITUDE_KEY = "sumLongitude";
+	private static final String	SUM_LATITUDE_KEY = "sumLatitude";
+	private static final String	SUM_ALTITUDE_KEY = "sumAltitude";
+
 	private static final String s_filenameExternalPublic = "gpsWayPointsPub.txt";
 	private static final String s_filenameExternalPrivate = "gpsWayPointsPriv.txt";
 
-	boolean					m_darkMode = false;
+	private static final DecimalFormat	s_accuracyFormat = new DecimalFormat( "Genauigkeit: 0.000m" );
 
-	GpsWayPointsWidget		m_theRose = null;
-	TextView				m_statusView = null;
-	TextView				m_altitudeView = null;
-	TextView				m_waypointNameView = null;
-	double					m_homeBearing = 0;
-	
-	String					m_myStatus = "Willkommen";
+	private boolean					m_darkMode = false;
 
-	boolean					m_calibration = false;
-	double					m_sumLongitude = 0;
-	double					m_sumLatitude = 0;
-	double					m_sumAltitude = 0;
-	long					m_locationFixCount = 0;
-	private DecimalFormat	m_accuracyFormat = new DecimalFormat( "Genauigkeit: 0.000m" );
-	PowerManager.WakeLock	m_wakeLock;
+	private GpsWayPointsWidget		m_theRose = null;
+	private TextView				m_statusView = null;
+	private TextView				m_altitudeView = null;
+	private TextView				m_waypointNameView = null;
 	
-	String 					m_lastName = null;
-	Location				m_home = new Location("");
-	SharedPreferences 		m_waypoints = null;
+	private String					m_myStatus = "Willkommen";
+
+	private boolean					m_calibration = false;
+	private double					m_sumLongitude = 0;
+	private double					m_sumLatitude = 0;
+	private double					m_sumAltitude = 0;
+	private long					m_locationFixCount = 0;
+	private PowerManager.WakeLock	m_wakeLock;
+	
+	String 							m_lastName = null;			// default access
+	Location						m_home = new Location("");	// default access
+	SharedPreferences 				m_waypoints = null;			// default access
 	
     public void showMessage( String title, String message, final boolean terminate )
     {
@@ -186,7 +187,7 @@ public class GpsWayPointsActivity extends GpsActivity
         switchColorMode();
 	}
 
-	private String locationString( Location src )
+	String locationString( Location src )
 	{
 		return src.getProvider() + '|' + 
 				Double.toString(src.getLongitude()) + '|' + 
@@ -562,7 +563,7 @@ public class GpsWayPointsActivity extends GpsActivity
     		String version = getString(R.string.app_version);
     		showMessage(
     			name, 
-    			name + " "+version+"\n(c) 2024 by Martin Gäckler\nhttps://www.gaeckler.at/",
+    			name + " "+version+"\n(c) 2024-2025 by Martin Gäckler\nhttps://www.gaeckler.at/",
     			false
     		);
     		break;
@@ -699,6 +700,7 @@ public class GpsWayPointsActivity extends GpsActivity
     @Override
     public void onPause()
     {
+        m_wakeLock.release();
     	saveSharedPreferences();
         super.onPause();
     }
@@ -706,8 +708,6 @@ public class GpsWayPointsActivity extends GpsActivity
 	public void onDestroy()
 	{
     	saveSharedPreferences();
-
-        m_wakeLock.release();
         super.onDestroy();
     }
 	
@@ -777,7 +777,7 @@ public class GpsWayPointsActivity extends GpsActivity
     	m_myStatus = text;
     	m_statusView.setText( 
 			text + ' ' + 
-			m_accuracyFormat.format(getAccuracy()) + ' ' + 
+			s_accuracyFormat.format(getAccuracy()) + ' ' + 
 			Long.toString(m_locationFixCount) + '/' +
 			Integer.toString(getNumLocations())
     	);
