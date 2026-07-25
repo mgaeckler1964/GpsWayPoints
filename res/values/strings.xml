@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GpsWayPoints</string>
-    <string name="app_version">3.7.28</string>
-    
+    <string name="app_copyright">(c) 2024-2026 by Martin Gäckler</string>
+    <string name="app_url">https://www.gaeckler.at/</string>
+
     <string name="savePos">Standort speichern</string>
     <string name="savePosAs">Standort mit Namen speichern &#8230;</string>
     <string name="loadPos">Standort laden &#8230;</string>

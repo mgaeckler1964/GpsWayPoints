@@ -13,7 +13,11 @@ Bei einigen Androidversionen kann es vorkommen, daß ihr die Berechtigung zum
 Ermitteln des Standorts manuel vergeben müßt. Andernfalls beendet das Programm 
 sofort mit einem Fehler.
 
-Zum Übersetzen der Quellen habe ich Android Developer Tools v22.6.2-1085508 
+Zum Übersetzen der Quellen habe ich 
+
+Android Studio Narwhal | 2025.1.1
+Build #AI-251.25410.109.2511.13665796
+
 verwendet. Das gebaute Package kann hier
 
 https://www.gaeckler.at/Software/software.htm#GpsWayPoints (in Wien)
@@ -26,8 +30,12 @@ geladen werden.
 
 ---
 
-To build the package I used Android Developer Tools v22.6.2-1085508. The 
-compiled package can be downloaded from
+To build the package I used
+
+Android Studio Narwhal | 2025.1.1
+Build #AI-251.25410.109.2511.13665796
+
+The compiled package can be downloaded from
 
 https://www.gaeckler.at/Software/software.htm#GpsWayPoints (in Vienna)
 
