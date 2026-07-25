@@ -49,12 +49,6 @@ public class GpsWayPointsActivity extends GpsActivity
 	private static final String	LAST_NAME_KEY = "lastName";
 	private static final String	DARK_MODE_KEY = "darkMode";
 
-	private static final String	CALIBRATION_KEY = "calibrationMode";
-	private static final String	FIX_COUNT_KEY = "fixCount";
-	private static final String	SUM_LONGITUDE_KEY = "sumLongitude";
-	private static final String	SUM_LATITUDE_KEY = "sumLatitude";
-	private static final String	SUM_ALTITUDE_KEY = "sumAltitude";
-
 	private static final String s_filenameExternalPublic = "gpsWayPointsPub.txt";
 	private static final String s_filenameExternalPrivate = "gpsWayPointsPriv.txt";
 
@@ -69,11 +63,6 @@ public class GpsWayPointsActivity extends GpsActivity
 	
 	private String					m_myStatus = "Willkommen";
 
-	private boolean					m_calibration = false;
-	private double					m_sumLongitude = 0;
-	private double					m_sumLatitude = 0;
-	private double					m_sumAltitude = 0;
-	private long					m_locationFixCount = 0;
 	private PowerManager.WakeLock	m_wakeLock;
 	
 	String 							m_lastName = null;			// default access
@@ -130,11 +119,6 @@ public class GpsWayPointsActivity extends GpsActivity
         {
         	homeStr = savedInstanceState.getString(HOME_KEY,"");
         	m_lastName = savedInstanceState.getString(LAST_NAME_KEY,"");
-            m_locationFixCount = savedInstanceState.getLong(FIX_COUNT_KEY,0);
-            m_calibration = savedInstanceState.getBoolean(CALIBRATION_KEY,false);
-            m_sumLongitude = savedInstanceState.getDouble(SUM_LONGITUDE_KEY,0);
-            m_sumLatitude = savedInstanceState.getDouble(SUM_LATITUDE_KEY,0);
-            m_sumAltitude = savedInstanceState.getDouble(SUM_ALTITUDE_KEY,0);
             m_darkMode = savedInstanceState.getBoolean(DARK_MODE_KEY,false);
             gpsInterval = savedInstanceState.getInt(GPS_SPEED_KEY,0); 
         }
@@ -378,7 +362,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		menu.findItem(R.id.savePos).setEnabled(hasLocation);
 		menu.findItem(R.id.savePosAs).setEnabled(hasLocation);
 
-		menu.findItem(R.id.calibration).setChecked(m_calibration);
+		menu.findItem(R.id.calibration).setChecked(isCalibrationMode());
 		menu.findItem(R.id.darkMode).setChecked(m_darkMode);
 
 		int gpsInterval = getInterval();
@@ -485,16 +469,13 @@ public class GpsWayPointsActivity extends GpsActivity
     		break;
     	}
     	case R.id.calibration:
-    		if( !m_calibration )
+    		if( isCalibrationMode() )
     		{
-    	    	m_calibration = true;
-    	    	m_sumLongitude = 0;
-    	    	m_sumLatitude = 0;
-    	    	m_sumAltitude = 0;
-    	    	m_locationFixCount = 0;    		}
+    			disableCalibartion();
+    		}
     		else
     		{
-    	    	m_calibration = false;
+    			enableCalibartion();
     		}
     		break;
 
@@ -524,7 +505,7 @@ public class GpsWayPointsActivity extends GpsActivity
     		String version = getString(R.string.app_version);
     		showMessage(
     			name, 
-    			name + " "+version+"\n(c) 2024-2025 by Martin Gäckler\nhttps://www.gaeckler.at/",
+    			name + " "+version+"\n(c) 2024-2026 by Martin Gäckler\nhttps://www.gaeckler.at/",
     			false
     		);
     		break;
@@ -673,13 +654,10 @@ public class GpsWayPointsActivity extends GpsActivity
 	@Override
 	protected void  onSaveInstanceState (Bundle outState)
 	{
+		super.onSaveInstanceState(outState);
 		outState.putString(HOME_KEY, locationString(m_home));
 		outState.putString(LAST_NAME_KEY, m_lastName);
-		outState.putLong(FIX_COUNT_KEY, m_locationFixCount);
-		outState.putBoolean(CALIBRATION_KEY, m_calibration);
-		outState.putDouble(SUM_LONGITUDE_KEY, m_sumLongitude);
-		outState.putDouble(SUM_LATITUDE_KEY, m_sumLatitude);
-		outState.putDouble(SUM_ALTITUDE_KEY, m_sumAltitude);
+
 		outState.putInt(GPS_SPEED_KEY, getInterval());
 		outState.putBoolean(DARK_MODE_KEY, m_darkMode);
 	}
@@ -696,24 +674,18 @@ public class GpsWayPointsActivity extends GpsActivity
 	
 	private void setAltitude( Location newLocation )
 	{
+		if(isCalibrationMode())
+		{
+			newLocation = getCalibratedLocation(newLocation.getProvider());
+		}
 		int snapedAltidute = getCorrectedAltidute(newLocation);
-		double longitude, latitude, altitude;
 
-		if(m_calibration)
-		{
-			longitude = m_sumLongitude/m_locationFixCount;
-			latitude = m_sumLatitude/m_locationFixCount;
-			altitude = m_sumAltitude/m_locationFixCount;
-		}
-		else
-		{
-			longitude = newLocation.getLongitude();
-			latitude = newLocation.getLatitude();
-			altitude = (int)newLocation.getAltitude();
-		}
+		double longitude = newLocation.getLongitude();
+		double latitude = newLocation.getLatitude();
+		double altitude = (int)newLocation.getAltitude();
 		
     	m_altitudeView.setText( 
-    		(m_calibration ? "*" : " ") +
+    		(isCalibrationMode() ? "*" : " ") +
     		Integer.toString(snapedAltidute) + "m (" + Integer.toString((int)(altitude+0.5)) + ")/" +
     		Double.toString(longitude) + '/' + Double.toString(latitude)
     	);
@@ -737,7 +709,7 @@ public class GpsWayPointsActivity extends GpsActivity
     	m_statusView.setText( 
 			text + ' ' + 
 			s_accuracyFormat.format(getAccuracy()) + ' ' + 
-			Long.toString(m_locationFixCount) + '/' +
+			Long.toString(getLocationFixCount()) + '/' +
 			Integer.toString(getNumLocations())
     	);
     }
@@ -806,14 +778,6 @@ public class GpsWayPointsActivity extends GpsActivity
 	@Override
 	public void onLocationChanged( Location newLocation )
     {
-    	++m_locationFixCount;
-    	if( m_calibration )
-    	{
-    		m_sumLongitude += newLocation.getLongitude();
-    		m_sumLatitude += newLocation.getLatitude();
-    		m_sumAltitude += newLocation.getAltitude();
-    	}
-
     	setStatus( m_myStatus );
 
     	{

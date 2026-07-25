@@ -40,6 +40,52 @@ public abstract class GpsActivity extends Activity {
 	private final GpsProcessor	m_processor = new GpsProcessor();
 	private int m_gpsInterval = 0;
 
+	private static final String	CALIBRATION_KEY = "calibrationMode";
+	private static final String	FIX_COUNT_KEY = "fixCount";
+	private static final String	SUM_LONGITUDE_KEY = "sumLongitude";
+	private static final String	SUM_LATITUDE_KEY = "sumLatitude";
+	private static final String	SUM_ALTITUDE_KEY = "sumAltitude";
+
+	private boolean	m_calibration = false;
+	private double	m_sumLongitude = 0;
+	private double	m_sumLatitude = 0;
+	private double	m_sumAltitude = 0;
+	private long	m_locationFixCount = 0;
+
+
+	public boolean isCalibrationMode()
+	{
+		return m_calibration;
+	}
+	public void enableCalibartion()
+	{
+    	m_calibration = true;
+    	m_sumLongitude = 0;
+    	m_sumLatitude = 0;
+    	m_sumAltitude = 0;
+    	m_locationFixCount = 0;
+	}
+	public void disableCalibartion()
+	{
+		m_calibration = false;
+	}
+	public Location getCalibratedLocation( String provider )
+	{
+		Location location = new Location(provider);
+		double longitude = m_sumLongitude/m_locationFixCount;
+		double latitude = m_sumLatitude/m_locationFixCount;
+		double altitude = m_sumAltitude/m_locationFixCount;
+		location.setLongitude(longitude);
+		location.setLatitude(latitude);
+		location.setAltitude(altitude);
+
+		return location;
+	}
+	public long getLocationFixCount()
+	{
+		return m_locationFixCount;
+	}
+	
 	public abstract void onLocationEnabled();
 	public abstract void onLocationDisabled();
 	public abstract void onLocationServiceOn();
@@ -60,6 +106,12 @@ public abstract class GpsActivity extends Activity {
         	onPermissionError();
         	return;
         }
+
+        m_calibration = savedInstanceState.getBoolean(CALIBRATION_KEY,false);
+        m_locationFixCount = savedInstanceState.getLong(FIX_COUNT_KEY,0);
+        m_sumLongitude = savedInstanceState.getDouble(SUM_LONGITUDE_KEY,0);
+        m_sumLatitude = savedInstanceState.getDouble(SUM_LATITUDE_KEY,0);
+        m_sumAltitude = savedInstanceState.getDouble(SUM_ALTITUDE_KEY,0);
 
         // Acquire a reference to the system Location Manager
         m_locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -124,6 +176,18 @@ public abstract class GpsActivity extends Activity {
 	    createGpsTimer(NORMAL_GPS);
     }
 	
+	@Override
+	protected void  onSaveInstanceState (Bundle outState)
+	{
+		super.onSaveInstanceState(outState);
+
+		outState.putLong(FIX_COUNT_KEY, m_locationFixCount);
+		outState.putBoolean(CALIBRATION_KEY, m_calibration);
+		outState.putDouble(SUM_LONGITUDE_KEY, m_sumLongitude);
+		outState.putDouble(SUM_LATITUDE_KEY, m_sumLatitude);
+		outState.putDouble(SUM_ALTITUDE_KEY, m_sumAltitude);
+	}
+
 	public void createGpsTimer( int interval )
 	{
 		if (m_gpsTimer!=null)
@@ -307,8 +371,15 @@ public abstract class GpsActivity extends Activity {
 		{
 			m_lock.lock();
 			try {
-				if( appendTrack )
+		    	if( appendTrack )
 				{
+			    	++m_locationFixCount;
+			    	if( m_calibration )
+			    	{
+			    		m_sumLongitude += newLocation.getLongitude();
+			    		m_sumLatitude += newLocation.getLatitude();
+			    		m_sumAltitude += newLocation.getAltitude();
+			    	}
 					appendTrackPoint(newLocation);
 				}
 				
