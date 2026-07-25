@@ -49,8 +49,6 @@ public class GpsWayPointsActivity extends GpsActivity
 	private static final String	LAST_NAME_KEY = "lastName";
 	private static final String	DARK_MODE_KEY = "darkMode";
 
-	private static final String	NAME_KEY = "name";
-
 	private static final String	CALIBRATION_KEY = "calibrationMode";
 	private static final String	FIX_COUNT_KEY = "fixCount";
 	private static final String	SUM_LONGITUDE_KEY = "sumLongitude";
@@ -185,43 +183,6 @@ public class GpsWayPointsActivity extends GpsActivity
         updateWaypointName();
         //simulateLocationFix(m_home);
         switchColorMode();
-	}
-
-	String locationString( Location src )
-	{
-		return src.getProvider() + '|' + 
-				Double.toString(src.getLongitude()) + '|' + 
-				Double.toString(src.getLatitude()) + '|' +
-				Double.toString(src.getAltitude());  
-	}
-	
-	Location locationString( String src )
-	{
-		String [] elements = src.split("[|]");
-		if(elements.length < 3) {
-			return null;
-		}
-		String provider = elements[0];
-		double longitude = Double.parseDouble(elements[1]);
-		double latitude = Double.parseDouble(elements[2]);
-		
-		if( Math.abs(longitude) < 0.01 && Math.abs(latitude) < 0.01)
-		{
-			return null;
-		}
-		Location newLocation = new Location(provider);
-		newLocation.setLongitude(longitude);
-		newLocation.setLatitude(latitude);
-		if (elements.length >= 4) {
-			newLocation.setAltitude(Double.parseDouble(elements[3]));;
-		}
-		if (elements.length >= 5) {
-			String name = elements[4];
-			Bundle bundle = new Bundle();
-			bundle.putString(NAME_KEY, name);
-			newLocation.setExtras(bundle);
-		}
-		return newLocation;  
 	}
 
 	private void savePositionAs(final Location lastLocation)
@@ -662,8 +623,6 @@ public class GpsWayPointsActivity extends GpsActivity
         FileOutputStream outputStream = null;
 
         file.createNewFile();
-        //second argument of FileOutputStream constructor indicates whether
-        //to append or create new file if one exists
         outputStream = new FileOutputStream(file, false);
 
     	Map<String,?> map = m_waypoints.getAll();
