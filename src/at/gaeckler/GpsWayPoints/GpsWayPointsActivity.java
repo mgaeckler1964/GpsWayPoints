@@ -1,3 +1,33 @@
+/*
+		Project:		GpsWayPoints
+		Module:			GpsWayPointsActivity.java
+		Description:	The android activity
+		Author:			Martin Gäckler
+		Address:		Hofmannsthalweg 14, A-4030 Linz
+		Web:			https://www.gaeckler.at/
+
+		Copyright:		(c) 2024-2026 Martin Gäckler
+
+		This program is free software: you can redistribute it and/or modify
+		it under the terms of the GNU General Public License as published by
+		the Free Software Foundation, version 3.
+
+		You should have received a copy of the GNU General Public License
+		along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+		THIS SOFTWARE IS PROVIDED BY Martin Gäckler, Linz, Austria ``AS IS''
+		AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+		TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+		PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR
+		CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+		SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+		LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+		USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+		ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+		OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+		OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+		SUCH DAMAGE.
+*/
 package at.gaeckler.GpsWayPoints;
 
 import java.io.BufferedReader;
@@ -25,7 +55,6 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.PowerManager;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,6 +70,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import at.gaeckler.gps.GpsActivity;
 import at.gaeckler.gps.GpsProcessor;
+
 public class GpsWayPointsActivity extends GpsActivity
 {
 	private static final String CONFIGURATION_FILE = "GpsWayPoints.cfg";
@@ -64,8 +94,6 @@ public class GpsWayPointsActivity extends GpsActivity
 	
 	private String					m_myStatus = "Willkommen";
 
-	private PowerManager.WakeLock	m_wakeLock;
-	
 	String 							m_lastName = null;			// default access
 	Location						m_home = new Location("");	// default access
 	SharedPreferences 				m_waypoints = null;			// default access
@@ -157,15 +185,8 @@ public class GpsWayPointsActivity extends GpsActivity
     	}
     	createGpsTimer(gpsInterval);
 
-        PowerManager	pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        m_wakeLock = pm.newWakeLock( PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "GpsWayPoints" );
-        m_wakeLock.acquire();
-        getWindow().addFlags(
-        	WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED|
-        	WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON|
-        	WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-        );
-        
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
 		System.out.println("setContentView");
         setContentView(R.layout.main);
 
@@ -287,7 +308,7 @@ public class GpsWayPointsActivity extends GpsActivity
     	alertDialog.show();    	
 	}
 	
-	private enum SelectorMode { LOAD_POS, DELETE_POS };
+	private enum SelectorMode { LOAD_POS, DELETE_POS }
 	
 	private void selectPosition( final SelectorMode mode )
 	{
@@ -303,16 +324,12 @@ public class GpsWayPointsActivity extends GpsActivity
     	// load the way points
     	Map<String,?> map = m_waypoints.getAll();
     	Set<String> keys = map.keySet();
-    	final ArrayList<String>  myArray = new ArrayList<String>();
-    	for (String name : keys )
-    	{
-    		myArray.add(name);
-    	}
+		final ArrayList<String> myArray = new ArrayList<>(keys);
     	Collections.sort(myArray);
     	
     	// fill the list view
     	final ListView positionList = view.findViewById(R.id.positionList);
-    	ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,R.layout.select_position,R.id.positionListItem, myArray);
+    	ArrayAdapter<String> adapter = new ArrayAdapter<>(this,R.layout.select_position,R.id.positionListItem, myArray);
 		positionList.setAdapter(adapter);
 
 		// configure the click handler
@@ -402,6 +419,106 @@ public class GpsWayPointsActivity extends GpsActivity
 				false
 		);
 	}
+	private void savePosAs()
+	{
+		Location lastLocation;
+		if(isCalibrationMode())
+		{
+			lastLocation = getCalibratedLocation("GPS");
+		}
+		else
+		{
+			lastLocation = getLastLocation();
+		}
+
+		if (lastLocation != null)
+		{
+			savePositionAs(lastLocation);
+		}
+	}
+	private void savePos()
+	{
+		Location lastLocation = getLastLocation();
+		if (lastLocation != null)
+		{
+			m_home = lastLocation;
+			onLocationChanged(lastLocation);
+		}
+	}
+	private void saveGpx()
+	{
+		int itemsSaved = 0;
+		String target="Public";
+		try
+		{
+			itemsSaved = saveWaypointFile(true);
+		}
+		catch( Exception e )
+		{
+			String str=e.toString();
+			System.out.println(str);
+			try
+			{
+				target="Private";
+				itemsSaved = saveWaypointFile(false);
+			}
+			catch( Exception e2 )
+			{
+				String str2=e2.toString();
+				System.out.println(str2);
+			}
+		}
+		String name = getString(R.string.app_name);
+		showMessage(
+				name,
+				itemsSaved+" items saved to " + target,
+				false
+		);
+	}
+	private void loadGpx()
+	{
+		int itemsLoaded = 0;
+		String source="Public";
+		try
+		{
+			itemsLoaded = loadWaypointFile(true);
+		}
+		catch( Exception e)
+		{
+			String str=e.toString();
+			System.out.println(str);
+			try
+			{
+				itemsLoaded = loadWaypointFile(false);
+				source="Private";
+			}
+			catch( Exception e2 )
+			{
+				String str2=e2.toString();
+				System.out.println(str2);
+			}
+		}
+		String name = getString(R.string.app_name);
+		showMessage(
+				name,
+				itemsLoaded+" items loaded from " + source,
+				false
+		);
+	}
+	private void calibration()
+	{
+		if( isCalibrationMode() )
+		{
+			removeGpsTimer();
+			disableCalibartion();
+		}
+		else
+		{
+			createGpsTimer(NORMAL_GPS);
+			enableCalibartion();
+		}
+	}
+
 	@Override
     public boolean onOptionsItemSelected( MenuItem item )
     {
@@ -417,100 +534,23 @@ public class GpsWayPointsActivity extends GpsActivity
         }
         else if( itemId == R.id.savePosAs )
 		{
-        	Location lastLocation;
-			if(isCalibrationMode())
-			{
-				lastLocation = getCalibratedLocation("GPS");
-			}
-			else
-			{
-				lastLocation = getLastLocation();
-			}
-
-			if (lastLocation != null)
-        	{
-        		savePositionAs(lastLocation);
-        	}
+			savePosAs();
     	}
         else if( itemId == R.id.savePos )
 		{
-        	Location lastLocation = getLastLocation();
-        	if (lastLocation != null)
-        	{
-        		m_home = lastLocation;
-        		onLocationChanged(lastLocation);
-        	}
+			savePos();
     	}
         else if( itemId == R.id.saveGpx )
 		{
-    		int itemsSaved = 0;
-    		String target="Public";
-    		try
-    		{
-    			itemsSaved = saveWaypointFile(true);
-    		}
-    		catch( Exception e )
-    		{
-				String str=e.toString();
-				System.out.println(str);
-    			try
-    			{
-    				target="Private";
-    				itemsSaved = saveWaypointFile(false);
-    			}
-    			catch( Exception e2 )
-    			{
-    				String str2=e2.toString();
-    				System.out.println(str2);
-    			}
-    		}
-    		String name = getString(R.string.app_name);
-    		showMessage(
-    			name, 
-    			Integer.toString(itemsSaved)+" items saved to " + target,
-    			false
-    		);
+			saveGpx();
     	}
         else if( itemId == R.id.loadGpx )
 		{
-    		int itemsLoaded = 0;
-    		String source="Public";
-    		try
-    		{
-    			itemsLoaded = loadWaypointFile(true);
-    		}
-    		catch( Exception e)
-    		{
-				String str=e.toString();
-				System.out.println(str);
-    			try
-    			{
-    				itemsLoaded = loadWaypointFile(false);
-    				source="Private";
-    			}
-    			catch( Exception e2 )
-    			{
-    				String str2=e2.toString();
-    				System.out.println(str2);
-    			}
-    		}
-    		String name = getString(R.string.app_name);
-    		showMessage(
-    			name,
-    			Integer.toString(itemsLoaded)+" items loaded from " + source,
-    			false
-    		);
+			loadGpx();
     	}
         else if( itemId == R.id.calibration )
 		{
-            if( isCalibrationMode() )
-			{
-				disableCalibartion();
-            }
-			else
-			{
-				enableCalibartion();
-            }
+			calibration();
         }
         else if( itemId == R.id.autoGps )
 		{
@@ -661,13 +701,12 @@ public class GpsWayPointsActivity extends GpsActivity
         editor.putInt(GPS_SPEED_KEY, getInterval() );
 
 		// Commit the edits!
-        editor.commit();
+        editor.apply();
     }
     
     @Override
     public void onPause()
     {
-        m_wakeLock.release();
     	saveSharedPreferences();
         super.onPause();
     }
@@ -690,7 +729,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	}
 	
 	// correction valid for Linz/Austria
-	static private int getCorrectedAltidute( Location loc )
+	static private int getCorrectedAltitude( Location loc )
 	{
 		return (int)loc.getAltitude()-50;
 	}
@@ -701,21 +740,24 @@ public class GpsWayPointsActivity extends GpsActivity
 	
 	private void showLocation( Location newLocation )
 	{
+		float	distance=0;
 		if(isCalibrationMode())
 		{
-			newLocation = getCalibratedLocation(newLocation.getProvider());
+			Location calibLocation = getCalibratedLocation(newLocation.getProvider());
+			distance = calibLocation.distanceTo(newLocation);
 		}
-		int snapedAltidute = getCorrectedAltidute(newLocation);
+		int snapedAltitude = getCorrectedAltitude(newLocation);
 
 		double longitude = newLocation.getLongitude();
 		double latitude = newLocation.getLatitude();
 		double altitude = (int)newLocation.getAltitude();
-		
-    	m_altitudeView.setText( 
-    		(isCalibrationMode() ? "*" : " ") +
-    		Integer.toString(snapedAltidute) + "m (" + Integer.toString((int)(altitude+0.5)) + ")/" +
-    		Double.toString(longitude) + '/' + Double.toString(latitude)
-    	);
+		StringBuilder sb = new StringBuilder().append(isCalibrationMode() ? "*" : " ")
+				.append(snapedAltitude).append("m (").append((int) (altitude+0.5)).append(")/")
+				.append(longitude).append('/')
+				.append(latitude);
+		if( distance > 0 )
+			sb.append('/').append((int)(distance+0.5)).append('m');
+		m_altitudeView.setText( sb.toString() );
 	}
 	
     void showMovement( double speed, double distanceDM, double distanceHM, double absHomeBearing, double currBearing )
@@ -733,12 +775,9 @@ public class GpsWayPointsActivity extends GpsActivity
     void setStatus( String text )
     {
     	m_myStatus = text;
-    	m_statusView.setText( 
-			text + ' ' + 
-			s_accuracyFormat.format(getAccuracy()) + ' ' + 
-			Long.toString(getLocationFixCount()) + '/' +
-			Integer.toString(getNumLocations())
-    	);
+    	m_statusView.setText(
+			text + ' ' + s_accuracyFormat.format(getAccuracy()) + ' ' + getLocationFixCount() + '/' + getNumLocations()
+		);
     }
     void updateWaypointName()
     {
@@ -796,8 +835,8 @@ public class GpsWayPointsActivity extends GpsActivity
 			}
 			setStatus( 
 				"GPS Satelliten: " + 
-				Integer.toString(SatellitesInFix) + "/" + 
-				Integer.toString(Satellites)
+				SatellitesInFix + "/" +
+				Satellites
 			);
 		}
 	}
