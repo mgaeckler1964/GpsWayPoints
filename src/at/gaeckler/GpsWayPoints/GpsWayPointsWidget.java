@@ -69,16 +69,16 @@ public class GpsWayPointsWidget extends View
 
 	private static final int blackColor = 0xFF000000;
 	private static final int whiteColor = 0xFFFFFFFF;
-	private static int backGroundCol = whiteColor;
-	private static int foreGroundCol = blackColor;
+	private static int s_backGroundCol = whiteColor;
+	private static int s_foreGroundCol = blackColor;
 	private static final int homeNeedleCol = 0xFFFF0000;
 	private static final int wayNeedleCol = 0xFF00FF00;
 	private static final int speedCol = 0xFF0000FF;
 	private void initKompass()
 	{
-		setBackgroundColor(backGroundCol);
+		setBackgroundColor(s_backGroundCol);
 		m_kompassPaint = new Paint();
-		m_kompassPaint.setColor(foreGroundCol);
+		m_kompassPaint.setColor(s_foreGroundCol);
 		m_kompassPaint.setStyle(Paint.Style.STROKE);
 		m_kompassPaint.setTextAlign(Paint.Align.CENTER);
 		m_kompassPaint.setAntiAlias( true );
@@ -236,15 +236,15 @@ public class GpsWayPointsWidget extends View
 	}
 	public void useBlackBackground()
 	{
-		backGroundCol = blackColor;
-		foreGroundCol = whiteColor;
+		s_backGroundCol = blackColor;
+		s_foreGroundCol = whiteColor;
 		initKompass();
 		invalidate();
 	}
 	public void useWhiteBackground()
 	{
-		backGroundCol = whiteColor;
-		foreGroundCol = blackColor;
+		s_backGroundCol = whiteColor;
+		s_foreGroundCol = blackColor;
 		initKompass();
 		invalidate();
 	}
