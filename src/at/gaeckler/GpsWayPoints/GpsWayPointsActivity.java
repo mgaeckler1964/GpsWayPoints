@@ -67,6 +67,9 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatDelegate;
+
 import at.gaeckler.gps.GpsActivity;
 import at.gaeckler.gps.GpsProcessor;
 
@@ -121,10 +124,12 @@ public class GpsWayPointsActivity extends GpsActivity
     {
         if( m_darkMode )
         {
-        	m_theRose.useBlackBackground();
+			AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+			m_theRose.useBlackBackground();
         }
         else
         {
+			AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         	m_theRose.useWhiteBackground();
         }
     }
