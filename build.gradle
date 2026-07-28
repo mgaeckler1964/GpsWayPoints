@@ -38,4 +38,7 @@ android {
             assets.srcDirs = ['assets']
         }
     }
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:deprecation"
+    }
 }
