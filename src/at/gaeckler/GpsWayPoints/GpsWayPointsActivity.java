@@ -47,7 +47,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import android.app.AlertDialog;
@@ -68,9 +67,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -107,36 +106,17 @@ public class GpsWayPointsActivity extends GpsActivity
 	Location						m_home = new Location("");	// default access
 	SharedPreferences 				m_waypoints = null;			// default access
 
-	public interface DialogCallback {
-		void onConfirmed(boolean confirmed);
-	}
-
-	public void showMessage( String title, String message, final boolean terminate, boolean addCancel, DialogCallback callback )
+	public void showMessage( String title, String message, final boolean terminate, DialogCallback callback )
 	{
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage(message)
-			.setTitle(title)
-			.setCancelable(false)
-			.setPositiveButton("OK", (dialog, id) ->
-			{
-				dialog.dismiss();
-				if (terminate) {
-					finish();
-				}
-				if (callback != null) callback.onConfirmed(true);
-			})
-		   .setIcon(R.drawable.icon)
-		;
-		if( addCancel )
-		{
-			builder.setNegativeButton("Abbruch", (dialog, id) ->
-			{
-				dialog.cancel();
-				if (callback != null) callback.onConfirmed(false);
-			});
-		}
-		AlertDialog alert = builder.create();
-		alert.show();
+		showMessage( R.drawable.icon, title, message, terminate, callback );
+	}
+	public void showError( String title, String message )
+	{
+		showMessage( R.drawable.error, title, message, false, null );
+	}
+	public void showMessage( String title, String message )
+	{
+		showMessage( R.drawable.icon, title, message, false, null );
 	}
 
 	private void switchColorMode()
@@ -227,6 +207,85 @@ public class GpsWayPointsActivity extends GpsActivity
 		switchColorMode();
 	}
 
+
+	private boolean savePositionAs(
+		Location lastLocation,
+		EditText positionName,
+		EditText positionLongitude,
+	 	EditText positionLatitude,
+		EditText positionAltitude
+	)
+	{
+		boolean ok = false;
+		try
+		{
+			String homeName = positionName.getText().toString();
+			if ( !homeName.isEmpty() )
+			{
+				m_home = lastLocation;
+
+				{
+					String homeLongitude = positionLongitude.getText().toString();
+					if( !homeLongitude.isEmpty() )
+					{
+						double longitude = Double.parseDouble(homeLongitude);
+						if (longitude < -180 || longitude > 180 )
+						{
+							showError( "Längengrad", "Ungültiger Wert für den Längengrad. [-180,180]");
+							return false;
+						}
+						m_home.setLongitude(longitude);
+					}
+				}
+
+				{
+					String homeLatitude = positionLatitude.getText().toString();
+					if( !homeLatitude.isEmpty() )
+					{
+						double latitude = Double.parseDouble(homeLatitude);
+						if (latitude < -90 || latitude > 90 )
+						{
+							showError( "Breitengrad", "Ungültiger Wert für den Breitengrad. [-90,90]");
+							return false;
+						}
+						m_home.setLatitude(latitude);
+					}
+				}
+
+				{
+					String homeAltitude = positionAltitude.getText().toString();
+					if( !homeAltitude.isEmpty() )
+					{
+						double altitude = Double.parseDouble(homeAltitude);
+						if (altitude < -11000 || altitude > 9000 )
+						{
+							showError( "Höhe", "Ungültiger Wert für die Höhe. [-11000,9000]");
+							return false;
+						}
+						setCorrectedAltitude( m_home, altitude );
+					}
+				}
+
+				String homeStr = locationString(m_home);
+
+				SharedPreferences.Editor editor = m_waypoints.edit();
+				editor.putString(homeName, homeStr );
+				editor.apply();
+
+				m_lastName = homeName;
+				updateWaypointName();
+
+				ok = true;
+			}
+			onLocationChanged(lastLocation);
+		}
+		catch (NumberFormatException e)
+		{
+			showError( "Unknown", "Ungültiger Wert für unbekannt.");
+			ok = false;
+		}
+		return ok;
+	}
 	private void savePositionAs(final Location lastLocation)
 	{
 		LayoutInflater layoutInflater = getLayoutInflater();
@@ -236,7 +295,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		alertDialog.setIcon(R.drawable.icon);
 		alertDialog.setCancelable(false);
 		alertDialog.setMessage("Geben Sie hier einen Namen ein:");
-
 
 		final EditText positionName = view.findViewById(R.id.positionName);
 		if (m_lastName != null)
@@ -248,87 +306,25 @@ public class GpsWayPointsActivity extends GpsActivity
 		final EditText positionLatitude = view.findViewById(R.id.positionLatitude);
 		final EditText positionAltitude = view.findViewById(R.id.positionAltitude);
 
-		alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-
-				try
-				{
-					String homeName = positionName.getText().toString();
-					if ( !homeName.isEmpty() )
-					{
-						m_home = lastLocation;
-
-						{
-							String homeLongitude = positionLongitude.getText().toString();
-							if( !homeLongitude.isEmpty() )
-							{
-								double longitude = Double.parseDouble(homeLongitude);
-								if (longitude < -180 || longitude > 180 )
-								{
-									throw new NumberFormatException();
-								}
-								m_home.setLongitude(longitude);
-							}
-						}
-
-						{
-							String homeLatitude = positionLatitude.getText().toString();
-							if( !homeLatitude.isEmpty() )
-							{
-								double latitude = Double.parseDouble(homeLatitude);
-								if (latitude < -90 || latitude > 90 )
-								{
-									throw new NumberFormatException();
-								}
-								m_home.setLatitude(latitude);
-							}
-						}
-
-						{
-							String homeAltitude = positionAltitude.getText().toString();
-							if( !homeAltitude.isEmpty() )
-							{
-								double altitude = Double.parseDouble(homeAltitude);
-								if (altitude < -11000 || altitude > 9000 )
-								{
-									throw new NumberFormatException();
-								}
-								setCorrectedAltitude( m_home, altitude );
-							}
-						}
-
-						String homeStr = locationString(m_home);
-
-						SharedPreferences.Editor editor = m_waypoints.edit();
-						editor.putString(homeName, homeStr );
-						editor.apply();
-
-						m_lastName = homeName;
-						updateWaypointName();
-
-						alertDialog.dismiss();
-					}
-					onLocationChanged(lastLocation);
-				}
-				catch (NumberFormatException e)
-				{
-					// stop processing the input
-				}
-			}
-		});
-
-
-		alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Abbruch", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				alertDialog.dismiss();
-			}
-		});
-
+		alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", (DialogInterface.OnClickListener)null );
+		alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Abbruch", (DialogInterface.OnClickListener)null );
 
 		alertDialog.setView(view);
 		alertDialog.show();
+
+		Button okButton = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE );
+		okButton.setOnClickListener((v) ->
+		{
+			boolean success = savePositionAs(
+					lastLocation,
+					positionName,
+					positionLongitude,
+					positionLatitude,
+					positionAltitude
+			);
+			if( success )
+				alertDialog.dismiss();
+		});
 	}
 	
 	private enum SelectorMode { LOAD_POS, DELETE_POS }
@@ -438,47 +434,39 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 
 		// configure the click handler
-		OnItemClickListener messageClickedHandler = new OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View v, int listViewPosition, long id)
+		OnItemClickListener messageClickedHandler = (parent, v, listViewPosition, id) ->
+		{
+			// Do something in response to the click.
+			String viewItem = myArray.get(listViewPosition);
+			if( mode == SelectorMode.DELETE_POS)
 			{
-				// Do something in response to the click.
-				String viewItem = myArray.get(listViewPosition);
-				if( mode == SelectorMode.DELETE_POS)
+				showMessage( "GpsWayPoints", "Wollen Sie " + viewItem + " löschen?", false, okClicked ->
 				{
-					showMessage("GpsWayPoints", "Wollen Sie " + viewItem + " löschen?", false, true, okClicked ->
+					if( okClicked )
 					{
-						if( okClicked )
-						{
-							alertDialog.dismiss();
-							m_waypoints.edit().remove(viewItem).apply();
-						}
-					});
-
-				}
-				else if( mode == SelectorMode.LOAD_POS)
-				{
-					alertDialog.dismiss();
-					m_lastName = viewItem;
-					updateWaypointName();
-					m_home = locationString(m_waypoints.getString(viewItem, ""));
-					Location last = getLastLocation();
-					if(last != null)                    // do we have a GPS-fix?
-					{
-						onLocationChanged(last);        // update the display
+						alertDialog.dismiss();
+						m_waypoints.edit().remove(viewItem).apply();
 					}
+				});
+
+			}
+			else if( mode == SelectorMode.LOAD_POS)
+			{
+				alertDialog.dismiss();
+				m_lastName = viewItem;
+				updateWaypointName();
+				m_home = locationString(m_waypoints.getString(viewItem, ""));
+				Location last = getLastLocation();
+				if(last != null)                    // do we have a GPS-fix?
+				{
+					onLocationChanged(last);        // update the display
 				}
 			}
 		};
 		positionList.setOnItemClickListener(messageClickedHandler);
 
 		// configure the cancel button
-		alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Abbruch", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				alertDialog.dismiss();
-			}
-		});
+		alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Abbruch", (DialogInterface.OnClickListener)null );
 
 		alertDialog.setView(view);
 		alertDialog.show();
@@ -522,13 +510,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		String version = getString(R.string.app_version);
 		String copyright = getString(R.string.app_copyright);
 		String url = getString(R.string.app_url);
-		showMessage(
-				name,
-				name + " "+version+"\n"+copyright+"\n"+url,
-				false,
-				false,
-				null
-		);
+		showMessage( name, name + " "+version+"\n"+copyright+"\n"+url );
 	}
 	private void savePosAs()
 	{
@@ -580,13 +562,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			}
 		}
 		String name = getString(R.string.app_name);
-		showMessage(
-			name,
-			itemsSaved+" items saved to " + target,
-			false,
-			false,
-			null
-		);
+		showMessage( name, itemsSaved + " items saved to " + target );
 	}
 	private void loadGpx()
 	{
@@ -613,11 +589,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 		String name = getString(R.string.app_name);
 		showMessage(
-				name,
-				itemsLoaded+" items loaded from " + source,
-				false,
-				false,
-				null
+			name,
+			itemsLoaded+" items loaded from " + source
 		);
 	}
 	private void calibration()
