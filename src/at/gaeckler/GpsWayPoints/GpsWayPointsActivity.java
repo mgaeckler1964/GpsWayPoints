@@ -40,6 +40,8 @@ import java.io.Reader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -100,262 +102,292 @@ public class GpsWayPointsActivity extends GpsActivity
 	Location						m_home = new Location("");	// default access
 	SharedPreferences 				m_waypoints = null;			// default access
 	
-    public void showMessage( String title, String message, final boolean terminate )
-    {
-    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    	builder.setMessage(message)
-    		   .setTitle(title)
-    	       .setCancelable(false)
-    	       .setNegativeButton("Fertig", new DialogInterface.OnClickListener() {
-    	           public void onClick(DialogInterface dialog, int id) {
-    	                dialog.cancel();
-    	                if( terminate )
-    	                {
-    	                	finish();
-    	                }
-    	           }
-    	       })
-    	       .setIcon(R.drawable.icon);
-    	AlertDialog alert = builder.create();
-    	alert.show();
-    }
+	public void showMessage( String title, String message, final boolean terminate )
+	{
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage(message)
+			   .setTitle(title)
+			   .setCancelable(false)
+			   .setNegativeButton("Fertig", new DialogInterface.OnClickListener() {
+				   public void onClick(DialogInterface dialog, int id) {
+						dialog.cancel();
+						if( terminate )
+						{
+							finish();
+						}
+				   }
+			   })
+			   .setIcon(R.drawable.icon);
+		AlertDialog alert = builder.create();
+		alert.show();
+	}
 
-    private void switchColorMode()
-    {
-        if( m_darkMode )
-        {
+	private void switchColorMode()
+	{
+		if( m_darkMode )
+		{
 			AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
 			m_theRose.useBlackBackground();
-        }
-        else
-        {
+		}
+		else
+		{
 			AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-        	m_theRose.useWhiteBackground();
-        }
-    }
+			m_theRose.useWhiteBackground();
+		}
+	}
 
-    /** Called when the activity is first created. */
+	/** Called when the activity is first created. */
 	@Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+	public void onCreate(Bundle savedInstanceState)
+	{
 		super.onCreate(savedInstanceState);
-        if( checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_DENIED )
-        {
+		if( checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_DENIED )
+		{
 			return;
-        }
-        // Prüfen, ob "Zugriff auf alle Dateien" bereits gewährt wurde:
-        if (!Environment.isExternalStorageManager()) {
-            try {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                intent.addCategory("android.intent.category.DEFAULT");
-                intent.setData(Uri.parse(String.format("package:%s", getPackageName())));
-                startActivity(intent);
-            } catch (Exception e) {
-                Intent intent = new Intent();
-                intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                startActivity(intent);
-            }
-        }
+		}
+		// Prüfen, ob "Zugriff auf alle Dateien" bereits gewährt wurde:
+		if (!Environment.isExternalStorageManager()) {
+			try {
+				Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+				intent.addCategory("android.intent.category.DEFAULT");
+				intent.setData(Uri.parse(String.format("package:%s", getPackageName())));
+				startActivity(intent);
+			} catch (Exception e) {
+				Intent intent = new Intent();
+				intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+				startActivity(intent);
+			}
+		}
 
-    	m_waypoints = getSharedPreferences(WAYPOINTS_FILE, Context.MODE_PRIVATE);
+		m_waypoints = getSharedPreferences(WAYPOINTS_FILE, Context.MODE_PRIVATE);
 
-    	String homeStr;
-    	int gpsInterval;
-    	if( savedInstanceState != null )
-        {
-        	homeStr = savedInstanceState.getString(HOME_KEY,"");
-        	m_lastName = savedInstanceState.getString(LAST_NAME_KEY,"");
-            m_darkMode = savedInstanceState.getBoolean(DARK_MODE_KEY,false);
-            gpsInterval = savedInstanceState.getInt(GPS_SPEED_KEY,0); 
-        }
-        else
-        {
-        	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
-        	homeStr = settings.getString(HOME_KEY,"");
-        	m_lastName = settings.getString(LAST_NAME_KEY,"");
-        	m_darkMode = settings.getBoolean(DARK_MODE_KEY,false);
-            gpsInterval = settings.getInt(GPS_SPEED_KEY,0); 
-        }
-    	Location tmpLocation = locationString(homeStr);
-    	if( tmpLocation != null )
-    	{
-    		m_home = tmpLocation;
-    	}
-    	else
-    	{
-        	m_home.setLongitude(14.282733);
-        	m_home.setLatitude(48.298820);
-        	setCorrectedAltitude(m_home, 260);
-    	}
-    	createGpsTimer(gpsInterval);
+		String homeStr;
+		int gpsInterval;
+		if( savedInstanceState != null )
+		{
+			homeStr = savedInstanceState.getString(HOME_KEY,"");
+			m_lastName = savedInstanceState.getString(LAST_NAME_KEY,"");
+			m_darkMode = savedInstanceState.getBoolean(DARK_MODE_KEY,false);
+			gpsInterval = savedInstanceState.getInt(GPS_SPEED_KEY,0);
+		}
+		else
+		{
+			SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
+			homeStr = settings.getString(HOME_KEY,"");
+			m_lastName = settings.getString(LAST_NAME_KEY,"");
+			m_darkMode = settings.getBoolean(DARK_MODE_KEY,false);
+			gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
+		}
+		Location tmpLocation = locationString(homeStr);
+		if( tmpLocation != null )
+		{
+			m_home = tmpLocation;
+		}
+		else
+		{
+			m_home.setLongitude(14.282733);
+			m_home.setLatitude(48.298820);
+			setCorrectedAltitude(m_home, 260);
+		}
+		createGpsTimer(gpsInterval);
 
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 		System.out.println("setContentView");
-        setContentView(R.layout.main);
+		setContentView(R.layout.main);
 
-        m_statusView = findViewById( R.id.statusView );
-    	setStatus( m_myStatus );
-    	m_theRose = findViewById( R.id.myRose );
-    	m_altitudeView = findViewById( R.id.altitudeView );
-    	m_waypointNameView = findViewById( R.id.waypointNameView );
+		m_statusView = findViewById( R.id.statusView );
+		setStatus( m_myStatus );
+		m_theRose = findViewById( R.id.myRose );
+		m_altitudeView = findViewById( R.id.altitudeView );
+		m_waypointNameView = findViewById( R.id.waypointNameView );
 
-        System.out.println("showSpeed");
-        clearMovementDisplay();
+		System.out.println("showSpeed");
+		clearMovementDisplay();
 
-        updateWaypointName();
-        //simulateLocationFix(m_home);
-        switchColorMode();
+		updateWaypointName();
+		//simulateLocationFix(m_home);
+		switchColorMode();
 	}
 
 	private void savePositionAs(final Location lastLocation)
 	{
-    	LayoutInflater layoutInflater = getLayoutInflater();
-    	final View view = layoutInflater.inflate(R.layout.save_position, null);
-    	final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-    	alertDialog.setTitle("Position speichern");
-    	alertDialog.setIcon(R.drawable.icon);
-    	alertDialog.setCancelable(false);
-    	alertDialog.setMessage("Geben Sie hier einen Namen ein:");
+		LayoutInflater layoutInflater = getLayoutInflater();
+		final View view = layoutInflater.inflate(R.layout.save_position, null);
+		final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+		alertDialog.setTitle("Position speichern");
+		alertDialog.setIcon(R.drawable.icon);
+		alertDialog.setCancelable(false);
+		alertDialog.setMessage("Geben Sie hier einen Namen ein:");
 
 
-    	final EditText positionName = view.findViewById(R.id.positionName);
-    	if (m_lastName != null)
-    	{
-    		positionName.setText(m_lastName);
-    	}
+		final EditText positionName = view.findViewById(R.id.positionName);
+		if (m_lastName != null)
+		{
+			positionName.setText(m_lastName);
+		}
 
-    	final EditText positionLongitude = view.findViewById(R.id.positionLongitude);
-    	final EditText positionLatitude = view.findViewById(R.id.positionLatitude);
-    	final EditText positionAltitude = view.findViewById(R.id.positionAltitude);
+		final EditText positionLongitude = view.findViewById(R.id.positionLongitude);
+		final EditText positionLatitude = view.findViewById(R.id.positionLatitude);
+		final EditText positionAltitude = view.findViewById(R.id.positionAltitude);
 
-    	alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
-    	    @Override
-    	    public void onClick(DialogInterface dialog, int which) {
+		alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
 
-    			try
-    			{
-    	        	String homeName = positionName.getText().toString();
-    	        	if ( !homeName.isEmpty() )
-    	        	{
-        				m_home = lastLocation;
-        				
-        				{
-	        				String homeLongitude = positionLongitude.getText().toString();
-	        				if( !homeLongitude.isEmpty() )
-	        				{
-	        					double longitude = Double.parseDouble(homeLongitude);
-	        					if (longitude < -180 || longitude > 180 )
-	        					{
-	        						throw new NumberFormatException();   
-	        					}
-	        					m_home.setLongitude(longitude);
-	        				}
-        				}
+				try
+				{
+					String homeName = positionName.getText().toString();
+					if ( !homeName.isEmpty() )
+					{
+						m_home = lastLocation;
 
-        				{
-	        				String homeLatitude = positionLatitude.getText().toString();
-	        				if( !homeLatitude.isEmpty() )
-	        				{
-	        					double latitude = Double.parseDouble(homeLatitude);
-	        					if (latitude < -90 || latitude > 90 )
-	        					{
-	        						throw new NumberFormatException();   
-	        					}
-	        					m_home.setLatitude(latitude);
-	        				}
-        				}
+						{
+							String homeLongitude = positionLongitude.getText().toString();
+							if( !homeLongitude.isEmpty() )
+							{
+								double longitude = Double.parseDouble(homeLongitude);
+								if (longitude < -180 || longitude > 180 )
+								{
+									throw new NumberFormatException();
+								}
+								m_home.setLongitude(longitude);
+							}
+						}
 
-        				{
-	        				String homeAltitude = positionAltitude.getText().toString();
-	        				if( !homeAltitude.isEmpty() )
-	        				{
-	        					double altitude = Double.parseDouble(homeAltitude);
-	        					if (altitude < -11000 || altitude > 9000 )
-	        					{
-	        						throw new NumberFormatException();   
-	        					}
-	        					setCorrectedAltitude( m_home, altitude );
-	        				}
-        				}
+						{
+							String homeLatitude = positionLatitude.getText().toString();
+							if( !homeLatitude.isEmpty() )
+							{
+								double latitude = Double.parseDouble(homeLatitude);
+								if (latitude < -90 || latitude > 90 )
+								{
+									throw new NumberFormatException();
+								}
+								m_home.setLatitude(latitude);
+							}
+						}
 
-        	        	String homeStr = locationString(m_home);
+						{
+							String homeAltitude = positionAltitude.getText().toString();
+							if( !homeAltitude.isEmpty() )
+							{
+								double altitude = Double.parseDouble(homeAltitude);
+								if (altitude < -11000 || altitude > 9000 )
+								{
+									throw new NumberFormatException();
+								}
+								setCorrectedAltitude( m_home, altitude );
+							}
+						}
 
-        	        	SharedPreferences.Editor editor = m_waypoints.edit();
-        	            editor.putString(homeName, homeStr );
-        	            editor.apply();
-        	            
-        	            m_lastName = homeName;
-        	            updateWaypointName();
+						String homeStr = locationString(m_home);
 
-        	        	alertDialog.dismiss();
-    	        	}
-    	        	onLocationChanged(lastLocation);
-    			}
-    			catch (NumberFormatException e)
-    			{
-    				// stop processing the input
-    			}
-    	    }
-    	});
+						SharedPreferences.Editor editor = m_waypoints.edit();
+						editor.putString(homeName, homeStr );
+						editor.apply();
+
+						m_lastName = homeName;
+						updateWaypointName();
+
+						alertDialog.dismiss();
+					}
+					onLocationChanged(lastLocation);
+				}
+				catch (NumberFormatException e)
+				{
+					// stop processing the input
+				}
+			}
+		});
 
 
-    	alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Abbruch", new DialogInterface.OnClickListener() {
-    	    @Override
-    	    public void onClick(DialogInterface dialog, int which) {
-    	        alertDialog.dismiss();
-    	    }
-    	});
+		alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Abbruch", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				alertDialog.dismiss();
+			}
+		});
 
-    	       
-    	alertDialog.setView(view);
-    	alertDialog.show();    	
+
+		alertDialog.setView(view);
+		alertDialog.show();
 	}
 	
 	private enum SelectorMode { LOAD_POS, DELETE_POS }
-	
+
+	private Map<String, Double> getDistanceMap( Location current )
+	{
+		Map<String, Double>	result = new HashMap<>();
+
+		for( Map.Entry<String, ?> entry : m_waypoints.getAll().entrySet() )
+		{
+			Object value = entry.getValue();
+			if( value instanceof String locationStr )
+			{
+				Location loc = locationString( locationStr );
+				if( loc != null )
+				{
+					result.put( entry.getKey(), (double)current.distanceTo(loc) );
+				}
+			}
+		}
+		return result;
+	}
 	private void selectPosition( final SelectorMode mode )
 	{
 		// build the dialog
-    	LayoutInflater layoutInflater = getLayoutInflater();
-    	final View view = layoutInflater.inflate(R.layout.select_position, null);
-    	final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-    	alertDialog.setTitle("Position " + ((mode == SelectorMode.LOAD_POS) ? "laden" : "löschen"));
-    	alertDialog.setIcon(R.drawable.icon);
-    	alertDialog.setCancelable(true);
-    	alertDialog.setMessage("Wählen Sie einen Wegpunkt aus:");
+		LayoutInflater layoutInflater = getLayoutInflater();
+		final View view = layoutInflater.inflate(R.layout.select_position, null);
+		final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+		alertDialog.setTitle("Position " + ((mode == SelectorMode.LOAD_POS) ? "laden" : "löschen"));
+		alertDialog.setIcon(R.drawable.icon);
+		alertDialog.setCancelable(true);
+		alertDialog.setMessage("Wählen Sie einen Wegpunkt aus:");
 
-    	// load the way points
-    	Map<String,?> map = m_waypoints.getAll();
-    	Set<String> keys = map.keySet();
+		// load the way points
+		Map<String,?> map = m_waypoints.getAll();
+		Set<String> keys = map.keySet();
 		final ArrayList<String> myArray = new ArrayList<>(keys);
-    	Collections.sort(myArray);
-    	
-    	// fill the list view
-    	final ListView positionList = view.findViewById(R.id.positionList);
-    	ArrayAdapter<String> adapter = new ArrayAdapter<>(this,R.layout.select_position,R.id.positionListItem, myArray);
+
+		Location lastLocation = getLastLocation();
+		if( lastLocation != null )
+		{
+			Map<String, Double> valuesMap = getDistanceMap( lastLocation );
+			myArray.sort(Comparator.comparing(key ->
+				valuesMap.getOrDefault(key, Double.MAX_VALUE)
+			));
+		}
+		else
+		{
+			Collections.sort(myArray);
+		}
+
+		// fill the list view
+		final ListView positionList = view.findViewById(R.id.positionList);
+		ArrayAdapter<String> adapter = new ArrayAdapter<>(this,R.layout.select_position,R.id.positionListItem, myArray);
 		positionList.setAdapter(adapter);
 
 		// configure the click handler
 		OnItemClickListener messageClickedHandler = new OnItemClickListener() {
 			@Override
-		    public void onItemClick(AdapterView<?> parent, View v, int listViewPosition, long id) 
+			public void onItemClick(AdapterView<?> parent, View v, int listViewPosition, long id)
 			{
-		        // Do something in response to the click.
+				// Do something in response to the click.
 				String viewItem = myArray.get(listViewPosition);
 				if( mode == SelectorMode.DELETE_POS)
 				{
-			        SharedPreferences.Editor editor = m_waypoints.edit();
+					SharedPreferences.Editor editor = m_waypoints.edit();
 
-			        editor.remove(viewItem);
+					editor.remove(viewItem);
 
-			        // Commit the edits!
-			        editor.apply();
+					// Commit the edits!
+					editor.apply();
 				}
 				else if( mode == SelectorMode.LOAD_POS)
 				{
 					m_lastName = viewItem;
-			        updateWaypointName();
+					updateWaypointName();
 					m_home = locationString(m_waypoints.getString(viewItem, ""));
 					Location last = getLastLocation();
 					if( last != null )					// do we have a GPS-fix?
@@ -363,30 +395,30 @@ public class GpsWayPointsActivity extends GpsActivity
 				}
 
 				alertDialog.dismiss();
-		    }
+			}
 		};
 		positionList.setOnItemClickListener(messageClickedHandler);
 
 		// configure the cancel button
-    	alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Abbruch", new DialogInterface.OnClickListener() {
-    	    @Override
-    	    public void onClick(DialogInterface dialog, int which) {
-    	        alertDialog.dismiss();
-    	    }
-    	});
+		alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Abbruch", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				alertDialog.dismiss();
+			}
+		});
 
-    	alertDialog.setView(view);
-    	alertDialog.show();    	
+		alertDialog.setView(view);
+		alertDialog.show();
 	}
 
 	@Override
-    public boolean onCreateOptionsMenu( android.view.Menu menu )
-    {
-    	MenuInflater inflater = getMenuInflater();
-    	inflater.inflate(R.menu.gwp_menu, menu);
-    	
-    	return super.onCreateOptionsMenu(menu);
-    }
+	public boolean onCreateOptionsMenu( android.view.Menu menu )
+	{
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.gwp_menu, menu);
+
+		return super.onCreateOptionsMenu(menu);
+	}
 	
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu)
@@ -524,202 +556,202 @@ public class GpsWayPointsActivity extends GpsActivity
 	}
 
 	@Override
-    public boolean onOptionsItemSelected( MenuItem item )
-    {
-    	int	itemId = item.getItemId();
-    	System.out.println( itemId );
-    	if( itemId == R.id.loadPos )
+	public boolean onOptionsItemSelected( MenuItem item )
+	{
+		int	itemId = item.getItemId();
+		System.out.println( itemId );
+		if( itemId == R.id.loadPos )
 		{
-            selectPosition(SelectorMode.LOAD_POS);
-        }
-        else if( itemId == R.id.deletePos )
+			selectPosition(SelectorMode.LOAD_POS);
+		}
+		else if( itemId == R.id.deletePos )
 		{
-            selectPosition(SelectorMode.DELETE_POS);
-        }
-        else if( itemId == R.id.savePosAs )
+			selectPosition(SelectorMode.DELETE_POS);
+		}
+		else if( itemId == R.id.savePosAs )
 		{
 			savePosAs();
-    	}
-        else if( itemId == R.id.savePos )
+		}
+		else if( itemId == R.id.savePos )
 		{
 			savePos();
-    	}
-        else if( itemId == R.id.saveGpx )
+		}
+		else if( itemId == R.id.saveGpx )
 		{
 			saveGpx();
-    	}
-        else if( itemId == R.id.loadGpx )
+		}
+		else if( itemId == R.id.loadGpx )
 		{
 			loadGpx();
-    	}
-        else if( itemId == R.id.calibration )
+		}
+		else if( itemId == R.id.calibration )
 		{
 			calibration();
-        }
-        else if( itemId == R.id.autoGps )
+		}
+		else if( itemId == R.id.autoGps )
 		{
-            removeGpsTimer();
-        }
-        else if( itemId == R.id.fastGps )
+			removeGpsTimer();
+		}
+		else if( itemId == R.id.fastGps )
 		{
-            createGpsTimer(FAST_GPS);
-        }
-        else if( itemId == R.id.normalGps )
+			createGpsTimer(FAST_GPS);
+		}
+		else if( itemId == R.id.normalGps )
 		{
-            createGpsTimer(NORMAL_GPS);
-        }
-        else if( itemId == R.id.slowGps )
+			createGpsTimer(NORMAL_GPS);
+		}
+		else if( itemId == R.id.slowGps )
 		{
-            createGpsTimer(SLOW_GPS);
-        }
-        else if( itemId == R.id.darkMode )
+			createGpsTimer(SLOW_GPS);
+		}
+		else if( itemId == R.id.darkMode )
 		{
-            m_darkMode = !m_darkMode;
-            switchColorMode();
-        }
-        else if( itemId ==  R.id.exit )
+			m_darkMode = !m_darkMode;
+			switchColorMode();
+		}
+		else if( itemId ==  R.id.exit )
 		{
-            finish();
-        }
-        else if( itemId == R.id.about )
+			finish();
+		}
+		else if( itemId == R.id.about )
 		{
 			showAbout();
-    	}
+		}
 
-    	return super.onOptionsItemSelected(item);
-    }
+		return super.onOptionsItemSelected(item);
+	}
 
-    @Override
-    public void onOptionsMenuClosed(Menu menu)
+	@Override
+	public void onOptionsMenuClosed(Menu menu)
 	{
-        super.onOptionsMenuClosed(menu);
+		super.onOptionsMenuClosed(menu);
 		// Workaround for https://issuetracker.google.com/issues/315761686
 		invalidateOptionsMenu();
-    }
+	}
 
-    private File getExternalFileName( boolean pub )
-    {
-        File dir = pub 
-        		? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) 
-        		: getExternalFilesDir(null);
+	private File getExternalFileName( boolean pub )
+	{
+		File dir = pub
+				? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+				: getExternalFilesDir(null);
 
-        System.out.println(dir.getPath());
-        if( !dir.exists() )
-        {
-        	dir.mkdir();
-        }
-        File file = new File(dir, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
-        System.out.println(file.getPath());
-        
-        return file;
-    }
+		System.out.println(dir.getPath());
+		if( !dir.exists() )
+		{
+			dir.mkdir();
+		}
+		File file = new File(dir, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
+		System.out.println(file.getPath());
 
-    private int loadWaypointFile(boolean pub) throws Exception
-    {
-    	int itemsLoaded = 0;
-        //Checking the availability state of the External Storage.
-        String state = Environment.getExternalStorageState();
-        if (!Environment.MEDIA_MOUNTED.equals(state)) 
-        {
-            //If it isn't mounted - we can't write into it.
-            System.out.println("Not mounted");
-            return 0;
-        }
+		return file;
+	}
 
-        File file = getExternalFileName(pub);
+	private int loadWaypointFile(boolean pub) throws Exception
+	{
+		int itemsLoaded = 0;
+		//Checking the availability state of the External Storage.
+		String state = Environment.getExternalStorageState();
+		if (!Environment.MEDIA_MOUNTED.equals(state))
+		{
+			//If it isn't mounted - we can't write into it.
+			System.out.println("Not mounted");
+			return 0;
+		}
 
-        if( !file.exists() )
-        {
-        	throw new FileNotFoundException( file.getPath() );
-        }
-        FileInputStream inputStream = new FileInputStream(file);
-        Reader reader = new InputStreamReader ( inputStream );
-        BufferedReader buffer = new BufferedReader ( reader );
-    	SharedPreferences.Editor editor = m_waypoints.edit();
+		File file = getExternalFileName(pub);
 
-        while( true )
-        {
-        	String text = buffer.readLine();
-        	if( text == null )
-        	{
-        		break;
-        	}
-        	Location loc = locationString(text);
-        	Bundle bundle = loc.getExtras();
-        	String name = bundle.getString(NAME_KEY);
-            editor.putString(name, locationString(loc) );
-            ++itemsLoaded;
-        }
-        editor.apply();
-        buffer.close();
-        
-        return itemsLoaded;
-    }
+		if( !file.exists() )
+		{
+			throw new FileNotFoundException( file.getPath() );
+		}
+		FileInputStream inputStream = new FileInputStream(file);
+		Reader reader = new InputStreamReader ( inputStream );
+		BufferedReader buffer = new BufferedReader ( reader );
+		SharedPreferences.Editor editor = m_waypoints.edit();
+
+		while( true )
+		{
+			String text = buffer.readLine();
+			if( text == null )
+			{
+				break;
+			}
+			Location loc = locationString(text);
+			Bundle bundle = loc.getExtras();
+			String name = bundle.getString(NAME_KEY);
+			editor.putString(name, locationString(loc) );
+			++itemsLoaded;
+		}
+		editor.apply();
+		buffer.close();
+
+		return itemsLoaded;
+	}
 
 	private int saveWaypointFile(boolean pub) throws Exception
-   	{
+	{
 		int itemsSaved=0;
-        //Checking the availability state of the External Storage.
-        String state = Environment.getExternalStorageState();
-        if (!Environment.MEDIA_MOUNTED.equals(state)) 
-        {
-            //If it isn't mounted - we can't write into it.
-            System.out.println("Not mounted");
-            return 0;
-        }
+		//Checking the availability state of the External Storage.
+		String state = Environment.getExternalStorageState();
+		if (!Environment.MEDIA_MOUNTED.equals(state))
+		{
+			//If it isn't mounted - we can't write into it.
+			System.out.println("Not mounted");
+			return 0;
+		}
 
-        //Create a new file that points to the root directory, with the given name:
-        File file = getExternalFileName(pub);
+		//Create a new file that points to the root directory, with the given name:
+		File file = getExternalFileName(pub);
 
-        //This point and below is responsible for the write operation
-        FileOutputStream outputStream;
+		//This point and below is responsible for the write operation
+		FileOutputStream outputStream;
 
-        file.createNewFile();
-        outputStream = new FileOutputStream(file, false);
+		file.createNewFile();
+		outputStream = new FileOutputStream(file, false);
 
-    	Map<String,?> map = m_waypoints.getAll();
-    	Set<String> keys = map.keySet();
-    	for( String key : keys )
-    	{
-            outputStream.write(map.get(key).toString().getBytes());
-            outputStream.write('|');
-            outputStream.write(key.getBytes());
-            outputStream.write(13);
-            ++itemsSaved;
-    	}
+		Map<String,?> map = m_waypoints.getAll();
+		Set<String> keys = map.keySet();
+		for( String key : keys )
+		{
+			outputStream.write(map.get(key).toString().getBytes());
+			outputStream.write('|');
+			outputStream.write(key.getBytes());
+			outputStream.write(13);
+			++itemsSaved;
+		}
 
-        outputStream.flush();
-        outputStream.close();
-        
-        return itemsSaved;
-    }
-    
-    private void saveSharedPreferences()
-    {
-    	SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = settings.edit();
+		outputStream.flush();
+		outputStream.close();
 
-        editor.putString(HOME_KEY, locationString(m_home) );
-        editor.putString(LAST_NAME_KEY, m_lastName);
-        editor.putBoolean(DARK_MODE_KEY, m_darkMode);
-        editor.putInt(GPS_SPEED_KEY, getInterval() );
+		return itemsSaved;
+	}
+
+	private void saveSharedPreferences()
+	{
+		SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = settings.edit();
+
+		editor.putString(HOME_KEY, locationString(m_home) );
+		editor.putString(LAST_NAME_KEY, m_lastName);
+		editor.putBoolean(DARK_MODE_KEY, m_darkMode);
+		editor.putInt(GPS_SPEED_KEY, getInterval() );
 
 		// Commit the edits!
-        editor.apply();
-    }
-    
-    @Override
-    public void onPause()
-    {
-    	saveSharedPreferences();
-        super.onPause();
-    }
+		editor.apply();
+	}
+
+	@Override
+	public void onPause()
+	{
+		saveSharedPreferences();
+		super.onPause();
+	}
 	@Override
 	public void onDestroy()
 	{
-    	saveSharedPreferences();
-        super.onDestroy();
-    }
+		saveSharedPreferences();
+		super.onDestroy();
+	}
 	
 	@Override
 	protected void  onSaveInstanceState (Bundle outState)
@@ -764,41 +796,41 @@ public class GpsWayPointsActivity extends GpsActivity
 		m_altitudeView.setText( sb.toString() );
 	}
 	
-    void showMovement( double speed, double distanceDM, double distanceHM, double absHomeBearing, double currBearing )
-    {
-    	m_theRose.showMovement(
-    		GpsProcessor.speedToKmh(speed), 
-    		(int)(distanceDM+0.5), (int)(distanceHM+0.5), 
-    		absHomeBearing, currBearing 
-    	);
-    }
-    void clearMovementDisplay()
-    {
-    	m_theRose.clearMovementDisplay();
-    }
-    void setStatus( String text )
-    {
-    	m_myStatus = text;
-    	m_statusView.setText(
+	void showMovement( double speed, double distanceDM, double distanceHM, double absHomeBearing, double currBearing )
+	{
+		m_theRose.showMovement(
+			GpsProcessor.speedToKmh(speed),
+			(int)(distanceDM+0.5), (int)(distanceHM+0.5),
+			absHomeBearing, currBearing
+		);
+	}
+	void clearMovementDisplay()
+	{
+		m_theRose.clearMovementDisplay();
+	}
+	void setStatus( String text )
+	{
+		m_myStatus = text;
+		m_statusView.setText(
 			text + ' ' + s_accuracyFormat.format(getAccuracy()) + ' ' + getLocationFixCount() + '/' + getNumLocations()
 		);
-    }
-    void updateWaypointName()
-    {
-    	m_waypointNameView.setText(m_lastName);
-    }
+	}
+	void updateWaypointName()
+	{
+		m_waypointNameView.setText(m_lastName);
+	}
 
 	@Override
 	public void onLocationEnabled()
 	{
-    	setStatus( "GPS ist eingeschaltet");
+		setStatus( "GPS ist eingeschaltet");
 	}
 
 	@Override
 	public void onLocationDisabled()
 	{
-    	setStatus( "GPS ist abgeschaltet");
-    	clearMovementDisplay();
+		setStatus( "GPS ist abgeschaltet");
+		clearMovementDisplay();
 	}
 	
 	@Override
@@ -829,19 +861,19 @@ public class GpsWayPointsActivity extends GpsActivity
 
 	@Override
 	public void onLocationChanged( Location newLocation )
-    {
-    	setStatus( m_myStatus );
-    	{
-    		final double absHomeBearing = newLocation.bearingTo(m_home);
-    		showMovement( 
-    			getSpeed(), 
-    			m_home.distanceTo(newLocation), m_home.getAltitude()-newLocation.getAltitude(), 
-    			absHomeBearing, getCurBearing() 
-    		);
-    	}
+	{
+		setStatus( m_myStatus );
+		{
+			final double absHomeBearing = newLocation.bearingTo(m_home);
+			showMovement(
+				getSpeed(),
+				m_home.distanceTo(newLocation), m_home.getAltitude()-newLocation.getAltitude(),
+				absHomeBearing, getCurBearing()
+			);
+		}
 
 		showLocation(newLocation);
-    }
+	}
 
 	@Override
 	public void onPermissionError() {
