@@ -74,7 +74,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDelegate;
 
 import at.gaeckler.gps.GpsActivity;
@@ -159,23 +158,12 @@ public class GpsWayPointsActivity extends GpsActivity
 
 		m_waypoints = getSharedPreferences(WAYPOINTS_FILE, Context.MODE_PRIVATE);
 
-		String homeStr;
-		int gpsInterval;
-		if( savedInstanceState != null )
-		{
-			homeStr = savedInstanceState.getString(HOME_KEY,"");
-			m_lastName = savedInstanceState.getString(LAST_NAME_KEY,"");
-			m_darkMode = savedInstanceState.getBoolean(DARK_MODE_KEY,false);
-			gpsInterval = savedInstanceState.getInt(GPS_SPEED_KEY,0);
-		}
-		else
-		{
-			SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
-			homeStr = settings.getString(HOME_KEY,"");
-			m_lastName = settings.getString(LAST_NAME_KEY,"");
-			m_darkMode = settings.getBoolean(DARK_MODE_KEY,false);
-			gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
-		}
+		SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
+		String homeStr = settings.getString(HOME_KEY,"");
+		m_lastName = settings.getString(LAST_NAME_KEY,"");
+		m_darkMode = settings.getBoolean(DARK_MODE_KEY,false);
+		int gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
+
 		Location tmpLocation = locationString(homeStr);
 		if( tmpLocation != null )
 		{
@@ -789,7 +777,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		editor.putBoolean(DARK_MODE_KEY, m_darkMode);
 		editor.putInt(GPS_SPEED_KEY, getInterval() );
 
-		// Commit the edits!
 		editor.apply();
 	}
 
@@ -799,24 +786,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		saveSharedPreferences();
 		super.onPause();
 	}
-	@Override
-	public void onDestroy()
-	{
-		saveSharedPreferences();
-		super.onDestroy();
-	}
-	
-	@Override
-	protected void  onSaveInstanceState( @NonNull Bundle outState)
-	{
-		super.onSaveInstanceState(outState);
-		outState.putString(HOME_KEY, locationString(m_home));
-		outState.putString(LAST_NAME_KEY, m_lastName);
 
-		outState.putInt(GPS_SPEED_KEY, getInterval());
-		outState.putBoolean(DARK_MODE_KEY, m_darkMode);
-	}
-	
 	// correction valid for Linz/Austria
 	static private int getCorrectedAltitude( Location loc )
 	{
