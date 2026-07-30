@@ -74,6 +74,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDelegate;
 
 import at.gaeckler.gps.GpsActivity;
@@ -806,7 +807,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	}
 	
 	@Override
-	protected void  onSaveInstanceState (Bundle outState)
+	protected void  onSaveInstanceState( @NonNull Bundle outState)
 	{
 		super.onSaveInstanceState(outState);
 		outState.putString(HOME_KEY, locationString(m_home));
