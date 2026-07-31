@@ -23,7 +23,7 @@ android {
 		targetSdk 36
 		versionCode 7
 		versionName "4.7.31"
-        resValue "string", "app_version", "\"${versionName}\""
+		resValue "string", "app_version", "\"${versionName}\""
 	}
 
 	sourceSets {
