@@ -45,5 +45,5 @@ http://www.gäckler.de/Software/software.htm#GpsWayPoints (in Germany)
 
 ## Screenshot
 <img width="1080" height="2340" alt="screen" src="https://github.com/user-attachments/assets/dcd48bc6-9be7-487b-9eed-6847635fd8f4" />
-WayPoints with Dark dode
+WayPoints with Dark mode
 
