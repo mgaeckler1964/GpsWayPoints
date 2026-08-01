@@ -783,7 +783,16 @@ public class GpsWayPointsActivity extends GpsActivity
 	@Override
 	public void onPause()
 	{
-		saveSharedPreferences();
+		/*
+		 	if location permission check failed we did not load the last settings
+		 	=> we do not have any usefull data to save and I don't want to overwrite
+		 	the last settings with the default values.
+		 */
+		if( m_theRose != null )
+		{
+			saveSharedPreferences();
+		}
+
 		super.onPause();
 	}
 
