@@ -30,6 +30,8 @@
 */
 package at.gaeckler.GpsWayPoints;
 
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static java.lang.Double.MAX_VALUE;
 
 import java.io.BufferedReader;
@@ -58,6 +60,7 @@ import android.content.pm.PackageManager;
 import android.location.GnssStatus;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
@@ -75,6 +78,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import at.gaeckler.gps.GpsActivity;
 import at.gaeckler.gps.GpsProcessor;
@@ -143,17 +148,47 @@ public class GpsWayPointsActivity extends GpsActivity
 			return;
 		}
 		// Prüfen, ob "Zugriff auf alle Dateien" bereits gewährt wurde:
-		if (!Environment.isExternalStorageManager()) {
-			try {
-				Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-				intent.addCategory("android.intent.category.DEFAULT");
-				intent.setData(Uri.parse(String.format("package:%s", getPackageName())));
-				startActivity(intent);
-			} catch (Exception e) {
-				Intent intent = new Intent();
-				intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-				startActivity(intent);
+		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+		{
+			if (!Environment.isExternalStorageManager())
+			{
+				try
+				{
+					Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+					intent.addCategory("android.intent.category.DEFAULT");
+					intent.setData(Uri.parse(String.format("package:%s", getPackageName())));
+					startActivity(intent);
+				}
+				catch (Exception e)
+				{
+					Intent intent = new Intent();
+					intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+					startActivity(intent);
+				}
 			}
+		}
+		else if(
+			ContextCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE)
+				!= PackageManager.PERMISSION_GRANTED
+		|| ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE)
+				!= PackageManager.PERMISSION_GRANTED
+		)
+		{
+			// Suggestion: Request the permission instead of just failing
+			ActivityCompat.requestPermissions(
+				this,
+				new String[]{READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE},
+				STORAGE_PERMISSION_REQUEST_CODE
+			);
+			return;
+		}
+		else if( checkCallingOrSelfPermission("android.permission.READ_EXTERNAL_STORAGE") == PackageManager.PERMISSION_DENIED )
+		{
+			showMessage("GpsWayPoint", "Read Permission Missing", true, null);
+		}
+		else if( checkCallingOrSelfPermission("android.permission.WRITE_EXTERNAL_STORAGE") == PackageManager.PERMISSION_DENIED )
+		{
+			showMessage("GpsWayPoint", "Write Premission Missing", true, null);
 		}
 
 		m_waypoints = getSharedPreferences(WAYPOINTS_FILE, Context.MODE_PRIVATE);
@@ -195,7 +230,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		//simulateLocationFix(m_home);
 		switchColorMode();
 	}
-
 
 	private boolean savePositionAs(
 		Location lastLocation,
@@ -834,9 +868,10 @@ public class GpsWayPointsActivity extends GpsActivity
 	void setStatus( String text )
 	{
 		m_myStatus = text;
-		m_statusView.setText(
-			text + ' ' + s_accuracyFormat.format(getAccuracy()) + ' ' + getLocationFixCount() + '/' + getNumLocations()
-		);
+		if( m_statusView != null )
+			m_statusView.setText(
+				text + ' ' + s_accuracyFormat.format(getAccuracy()) + ' ' + getLocationFixCount() + '/' + getNumLocations()
+			);
 	}
 	void updateWaypointName()
 	{

@@ -19,7 +19,7 @@ android {
 
 	defaultConfig {
 		applicationId "at.gaeckler.GpsWayPoints"
-		minSdk 30
+		minSdk 26
 		targetSdk 36
 		versionCode 8
 		versionName "4.8.1"
