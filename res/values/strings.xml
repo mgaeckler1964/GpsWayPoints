@@ -1,28 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GpsWayPoints</string>
-    <string name="app_copyright">(c) 2024-2026 by Martin Gäckler</string>
+    <string name="app_copyright">&#169; 2024&#8211;2026 by Martin Gäckler</string>
     <string name="app_url">https://www.gaeckler.at/</string>
 
-    <string name="savePos">Standort speichern</string>
-    <string name="savePosAs">Standort mit Namen speichern &#8230;</string>
-    <string name="loadPos">Standort laden &#8230;</string>
-    <string name="deletePos">Standort löschen &#8230;</string>
-    <string name="gpsSpeed">GPS Intervall</string>
-    <string name="gpsSpeedAuto">Automatik</string>
-    <string name="saveGpx">GPX speichern</string>
-    <string name="loadGpx">GPX laden</string>
+    <string name="savePos">Save Location</string>
+    <string name="savePosAs">Save Location with Name &#8230;</string>
+    <string name="loadPos">Load Position &#8230;</string>
+    <string name="deletePos">Delete Position &#8230;</string>
+    <string name="gpsSpeed">GPS Interval</string>
+    <string name="gpsSpeedAuto">Automatic</string>
+    <string name="saveGpx">Save GPX</string>
+    <string name="loadGpx">Load GPX</string>
     
-    <string name="calibration">Kalibrierung</string>
-    <string name="darkMode">Darkmode</string>
+    <string name="calibration">Calibration</string>
+    <string name="darkMode">Dark Mode</string>
 
     <string name="about">Info</string>
-    <string name="exit">Beenden</string>
+    <string name="exit">Exit</string>
     
-    <string name="statusLabel">Status</string>
-    <string name="altitudeLabel">Höhe</string>
+    <string name="statusLabel">State</string>
+    <string name="altitudeLabel">Height</string>
     
     <string name="positionName">Name</string>
-    <string name="positionLongitude">Längengrad</string>
-    <string name="positionLatitude">Breitengrad</string>
+    <string name="positionLongitude">Longitude</string>
+    <string name="positionLatitude">Latitude</string>
+
+    <string name="confirmDelete">"Do you want to delete %s?"</string>
+    <string name="itemsSaved">%1$d items saved to %2$s</string>
+    <string name="itemsLoaded">%1$d items loaded from %2$s</string>
+
+    <string name="invalidRange1">Invalid value for %1$s</string>
+    <string name="invalidRange3">Invalid value for %1$s [%2$d,%3$d]</string>
+    <string name="unknown">Unknown</string>
+    <string name="okLabel">OK</string>
+    <string name="cancelLabel">Cancel</string>
+    <string name="gpsEnabled">GPS is enabled.</string>
+    <string name="gpsDisabled">GPS is disabled.</string>
+    <string name="gpsStarted">GPS started</string>
+    <string name="gpsStoped">GPS stoped</string>
+    <string name="gpsFirstFix">GPS first fix</string>
+    <string name="gpsSatellites2">GPS satellites: %1$d/%2$d</string>
+
+    <string name="selectWayPoint">Select a Waypoint:</string>
+    <string name="loadWayPoint">Load Waypoint</string>
+    <string name="deleteWayPoint">Delete Waypoint</string>
+
+    <string name="accuracy_format">%1$s Accuracy: %2$.3fm %3$d/%4$d</string>
 </resources>

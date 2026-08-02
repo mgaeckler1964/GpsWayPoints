@@ -39,7 +39,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -87,8 +86,6 @@ public class GpsWayPointsActivity extends GpsActivity
 	private static final String s_filenameExternalPublic = "gpsWayPointsPub.txt";
 	private static final String s_filenameExternalPrivate = "gpsWayPointsPriv.txt";
 
-	private static final DecimalFormat	s_accuracyFormat = new DecimalFormat( "Genauigkeit: 0.000m" );
-
 	private boolean					m_darkMode = false;
 
 	private GpsWayPointsWidget		m_theRose = null;
@@ -102,16 +99,18 @@ public class GpsWayPointsActivity extends GpsActivity
 	Location						m_home = new Location("");	// default access
 	SharedPreferences 				m_waypoints = null;			// default access
 
-	public void showMessage( String title, String message, final boolean terminate, DialogCallback callback )
+	public void showMessage( String message, final boolean terminate, DialogCallback callback )
 	{
+		String title = getString(R.string.app_name);
 		showMessage( R.drawable.icon, title, message, terminate, callback );
 	}
 	public void showError( String title, String message )
 	{
 		showMessage( R.drawable.error, title, message, false, null );
 	}
-	public void showMessage( String title, String message )
+	public void showMessage( String message )
 	{
+		String title = getString(R.string.app_name);
 		showMessage( R.drawable.icon, title, message, false, null );
 	}
 
@@ -207,7 +206,8 @@ public class GpsWayPointsActivity extends GpsActivity
 						double longitude = Double.parseDouble(homeLongitude);
 						if (longitude < -180 || longitude > 180 )
 						{
-							showError( "Längengrad", "Ungültiger Wert für den Längengrad. [-180,180]");
+							String longitudestyle = getString(R.string.positionLongitude);
+							showError( longitudestyle, getString(R.string.invalidRange3, longitudestyle, -180, 180));
 							return false;
 						}
 						m_home.setLongitude(longitude);
@@ -221,7 +221,8 @@ public class GpsWayPointsActivity extends GpsActivity
 						double latitude = Double.parseDouble(homeLatitude);
 						if (latitude < -90 || latitude > 90 )
 						{
-							showError( "Breitengrad", "Ungültiger Wert für den Breitengrad. [-90,90]");
+							String latitudestyle = getString(R.string.positionLatitude);
+							showError( latitudestyle, getString(R.string.invalidRange3, latitudestyle, -90, 90));
 							return false;
 						}
 						m_home.setLatitude(latitude);
@@ -235,7 +236,8 @@ public class GpsWayPointsActivity extends GpsActivity
 						double altitude = Double.parseDouble(homeAltitude);
 						if (altitude < -11000 || altitude > 9000 )
 						{
-							showError( "Höhe", "Ungültiger Wert für die Höhe. [-11000,9000]");
+							String altitudeLabel = getString(R.string.altitudeLabel);
+							showError( altitudeLabel, getString(R.string.invalidRange3, altitudeLabel, -11000, 9000));
 							return false;
 						}
 						setCorrectedAltitude( m_home, altitude );
@@ -257,7 +259,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 		catch (NumberFormatException e)
 		{
-			showError( "Unknown", "Ungültiger Wert für unbekannt.");
+			String unknownStyle = getString(R.string.unknown);
+			showError( unknownStyle, getString(R.string.invalidRange1, unknownStyle));
 			ok = false;
 		}
 		return ok;
@@ -282,8 +285,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		final EditText positionLatitude = view.findViewById(R.id.positionLatitude);
 		final EditText positionAltitude = view.findViewById(R.id.positionAltitude);
 
-		alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", (DialogInterface.OnClickListener)null );
-		alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Abbruch", (DialogInterface.OnClickListener)null );
+		alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, getText(R.string.okLabel), (DialogInterface.OnClickListener)null );
+		alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getText(R.string.cancelLabel), (DialogInterface.OnClickListener)null );
 
 		alertDialog.setView(view);
 		alertDialog.show();
@@ -298,8 +301,10 @@ public class GpsWayPointsActivity extends GpsActivity
 					positionLatitude,
 					positionAltitude
 			);
-			if( success )
+			if(success)
+			{
 				alertDialog.dismiss();
+			}
 		});
 	}
 	
@@ -348,10 +353,12 @@ public class GpsWayPointsActivity extends GpsActivity
 		LayoutInflater layoutInflater = getLayoutInflater();
 		final View view = layoutInflater.inflate(R.layout.select_position, null);
 		final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-		alertDialog.setTitle("Position " + ((mode == SelectorMode.LOAD_POS) ? "laden" : "löschen"));
+
+		alertDialog.setTitle(getString((mode == SelectorMode.LOAD_POS) ? R.string.loadWayPoint : R.string.deleteWayPoint));
+
 		alertDialog.setIcon(R.drawable.icon);
 		alertDialog.setCancelable(true);
-		alertDialog.setMessage("Wählen Sie einen Wegpunkt aus:");
+		alertDialog.setMessage(getString(R.string.selectWayPoint));
 
 		// load the way points
 		Map<String,?> map = m_waypoints.getAll();
@@ -416,7 +423,8 @@ public class GpsWayPointsActivity extends GpsActivity
 			String viewItem = myArray.get(listViewPosition);
 			if( mode == SelectorMode.DELETE_POS)
 			{
-				showMessage( "GpsWayPoints", "Wollen Sie " + viewItem + " löschen?", false, okClicked ->
+				String message = getString(R.string.confirmDelete, viewItem);
+				showMessage( message, false, okClicked ->
 				{
 					if( okClicked )
 					{
@@ -442,7 +450,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		positionList.setOnItemClickListener(messageClickedHandler);
 
 		// configure the cancel button
-		alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Abbruch", (DialogInterface.OnClickListener)null );
+		alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getText(R.string.cancelLabel), (DialogInterface.OnClickListener)null );
 
 		alertDialog.setView(view);
 		alertDialog.show();
@@ -486,7 +494,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		String version = getString(R.string.app_version);
 		String copyright = getString(R.string.app_copyright);
 		String url = getString(R.string.app_url);
-		showMessage( name, name + " "+version+"\n"+copyright+"\n"+url );
+		showMessage( name + " "+version+"\n"+copyright+"\n"+url );
 	}
 	private void savePosAs()
 	{
@@ -498,6 +506,10 @@ public class GpsWayPointsActivity extends GpsActivity
 		else
 		{
 			lastLocation = getLastLocation();
+		}
+		if(lastLocation == null)
+		{
+			lastLocation = m_home;
 		}
 
 		if (lastLocation != null)
@@ -537,8 +549,8 @@ public class GpsWayPointsActivity extends GpsActivity
 				System.out.println(str2);
 			}
 		}
-		String name = getString(R.string.app_name);
-		showMessage( name, itemsSaved + " items saved to " + target );
+		String message = getString(R.string.itemsSaved, itemsSaved, target);
+		showMessage( message );
 	}
 	private void loadGpx()
 	{
@@ -563,11 +575,8 @@ public class GpsWayPointsActivity extends GpsActivity
 				System.out.println(str2);
 			}
 		}
-		String name = getString(R.string.app_name);
-		showMessage(
-			name,
-			itemsLoaded+" items loaded from " + source
-		);
+		String message = getString(R.string.itemsLoaded, itemsLoaded, source);
+		showMessage( message );
 	}
 	private void calibration()
 	{
@@ -818,14 +827,22 @@ public class GpsWayPointsActivity extends GpsActivity
 	{
 		m_theRose.clearMovementDisplay();
 	}
+
 	void setStatus( String text )
 	{
 		m_myStatus = text;
-		if( m_statusView != null )
-			m_statusView.setText(
-				text + ' ' + s_accuracyFormat.format(getAccuracy()) + ' ' + getLocationFixCount() + '/' + getNumLocations()
-			);
+		if(m_statusView != null)
+		{
+			m_statusView.setText( getString(
+				R.string.accuracy_format,
+				text,
+				getAccuracy(),
+				getLocationFixCount(),
+				getNumLocations()
+			));
+		}
 	}
+
 	void updateWaypointName()
 	{
 		m_waypointNameView.setText(m_lastName);
@@ -834,13 +851,13 @@ public class GpsWayPointsActivity extends GpsActivity
 	@Override
 	public void onLocationEnabled()
 	{
-		setStatus( "GPS ist eingeschaltet");
+		setStatus( getString(R.string.gpsEnabled) );
 	}
 
 	@Override
 	public void onLocationDisabled()
 	{
-		setStatus( "GPS ist abgeschaltet");
+		setStatus( getString(R.string.gpsDisabled) );
 		clearRose();
 	}
 	
@@ -849,15 +866,15 @@ public class GpsWayPointsActivity extends GpsActivity
 	{
 		if(event == GPS_EVENT_STARTED)
 		{
-			setStatus("GPS gestartet");
+			setStatus(getString(R.string.gpsStarted));
 		}
 		else if(event == GPS_EVENT_STOPPED)
 		{
-			setStatus("GPS gestoppt");
+			setStatus(getString(R.string.gpsStoped));
 		}
 		else if(event == GPS_EVENT_FIRST_FIX)
 		{
-			setStatus("GPS erster Fix");
+			setStatus(getString(R.string.gpsFirstFix));
 		}
 		else if(event == GPS_EVENT_SATELLITE_STATUS)
 		{
@@ -872,7 +889,7 @@ public class GpsWayPointsActivity extends GpsActivity
 				}
 			}
 
-			setStatus("GPS Satelliten: " + SatellitesInFix + "/" + Satellites);
+			setStatus(getString(R.string.gpsSatellites2,SatellitesInFix, Satellites) );
 		}
 	}
 
