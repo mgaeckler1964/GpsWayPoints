@@ -1,6 +1,6 @@
 # GpsWayPoints
  
-Dieses Programm zeigt Die die Richtung und die Entfernng zu einen bekannten 
+Dieses Programm zeigt die Richtung und die Entfernng zu einen bekannten 
 Punkt auf der Erde.
 
 Wenn Du Deine augenblickliche Position speicherst, zeigt Dir das Programm immer 
@@ -11,7 +11,10 @@ auch dann erhalten bleibt, wenn Du eine neue Position speicherst.
 
 Bei einigen Androidversionen kann es vorkommen, daß ihr die Berechtigung zum 
 Ermitteln des Standorts manuel vergeben müßt. Andernfalls beendet das Programm 
-sofort mit einem Fehler.
+sofort mit einem Fehler. Üblicherweise sollte die Berechtigung angefordert werden. 
+Der Zugriff auf den Speicher ist notwendig, damit die gespeicherten Wegpunkte auch
+dauerhaft gespeichert werden können. Ich nutze das Feature auch, um Wegpunkte 
+zwischen meinen Geräten austauschen zu können.
 
 Zum Übersetzen der Quellen habe ich 
 
