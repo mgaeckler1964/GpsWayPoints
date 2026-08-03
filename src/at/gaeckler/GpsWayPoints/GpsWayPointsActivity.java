@@ -93,7 +93,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	private TextView				m_altitudeView = null;
 	private TextView				m_waypointNameView = null;
 	
-	private String					m_myStatus = "Willkommen";
+	private String					m_myStatus = null;
 
 	String 							m_lastName = null;			// default access
 	Location						m_home = new Location("");	// default access
@@ -170,6 +170,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		setContentView(R.layout.main);
 
 		m_statusView = findViewById( R.id.statusView );
+		m_myStatus = getString(R.string.welcome);
 		setStatus( m_myStatus );
 		m_theRose = findViewById( R.id.myRose );
 		m_altitudeView = findViewById( R.id.altitudeView );
@@ -506,10 +507,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		else
 		{
 			lastLocation = getLastLocation();
-		}
-		if(lastLocation == null)
-		{
-			lastLocation = m_home;
 		}
 
 		if (lastLocation != null)

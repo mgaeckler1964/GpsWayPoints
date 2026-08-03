@@ -4,6 +4,8 @@
     <string name="app_copyright">&#169; 2024&#8211;2026 by Martin Gäckler</string>
     <string name="app_url">https://www.gaeckler.at/</string>
 
+	<string name="welcome">Wellcome</string>
+
     <string name="savePos">Save Location</string>
     <string name="savePosAs">Save Location with Name &#8230;</string>
     <string name="loadPos">Load Position &#8230;</string>
