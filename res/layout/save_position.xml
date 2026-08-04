@@ -4,16 +4,16 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
     
-	<TextView android:text="@string/positionName" android:layout_width="wrap_content" android:layout_height="wrap_content" android:labelFor="@+id/positionName"></TextView>
-	<EditText android:layout_width="fill_parent" android:layout_height="wrap_content" android:inputType="text" android:id="@+id/positionName"></EditText>
+	<TextView android:text="@string/nameLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:labelFor="@+id/positionName"/>
+	<EditText android:layout_width="fill_parent" android:layout_height="wrap_content" android:inputType="text" android:id="@+id/positionName"/>
 	
-	<TextView android:text="@string/positionLongitude" android:layout_width="wrap_content" android:layout_height="wrap_content" android:labelFor="@+id/positionLongitude"></TextView>
-	<EditText android:layout_width="fill_parent" android:layout_height="wrap_content" android:inputType="numberDecimal|numberSigned" android:id="@+id/positionLongitude"></EditText>
+	<TextView android:text="@string/longitudeLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:labelFor="@+id/positionLongitude"/>
+	<EditText android:layout_width="fill_parent" android:layout_height="wrap_content" android:inputType="numberDecimal|numberSigned" android:id="@+id/positionLongitude"/>
 		
-	<TextView android:text="@string/positionLatitude" android:layout_width="wrap_content" android:layout_height="wrap_content" android:labelFor="@+id/positionLatitude"></TextView>
-	<EditText android:layout_width="fill_parent" android:layout_height="wrap_content" android:inputType="numberDecimal|numberSigned" android:id="@+id/positionLatitude"></EditText>
+	<TextView android:text="@string/latitudeLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:labelFor="@+id/positionLatitude"/>
+	<EditText android:layout_width="fill_parent" android:layout_height="wrap_content" android:inputType="numberDecimal|numberSigned" android:id="@+id/positionLatitude"/>
 		
-	<TextView android:text="@string/altitudeLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:labelFor="@+id/positionAltitude"></TextView>
-	<EditText android:layout_width="fill_parent" android:layout_height="wrap_content" android:inputType="numberDecimal|numberSigned" android:id="@+id/positionAltitude"></EditText>
+	<TextView android:text="@string/altitudeLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:labelFor="@+id/positionAltitude"/>
+	<EditText android:layout_width="fill_parent" android:layout_height="wrap_content" android:inputType="numberDecimal|numberSigned" android:id="@+id/positionAltitude"/>
 		
 </LinearLayout>

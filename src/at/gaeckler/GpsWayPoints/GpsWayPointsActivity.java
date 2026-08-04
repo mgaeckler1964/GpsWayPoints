@@ -44,10 +44,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -207,8 +209,8 @@ public class GpsWayPointsActivity extends GpsActivity
 						double longitude = parseInternationalDouble(homeLongitude);
 						if (longitude < -180 || longitude > 180 )
 						{
-							String longitudestyle = getString(R.string.positionLongitude);
-							showError( longitudestyle, getString(R.string.invalidRange3, longitudestyle, -180, 180));
+							String longitudeLabel = getString(R.string.longitudeLabel);
+							showError( longitudeLabel, getString(R.string.invalidRange3, longitudeLabel, -180, 180));
 							return false;
 						}
 						m_home.setLongitude(longitude);
@@ -222,8 +224,8 @@ public class GpsWayPointsActivity extends GpsActivity
 						double latitude = parseInternationalDouble(homeLatitude);
 						if (latitude < -90 || latitude > 90 )
 						{
-							String latitudestyle = getString(R.string.positionLatitude);
-							showError( latitudestyle, getString(R.string.invalidRange3, latitudestyle, -90, 90));
+							String latitudeLabel = getString(R.string.latitudeLabel);
+							showError( latitudeLabel, getString(R.string.invalidRange3, latitudeLabel, -90, 90));
 							return false;
 						}
 						m_home.setLatitude(latitude);
@@ -387,11 +389,11 @@ public class GpsWayPointsActivity extends GpsActivity
 				myArray.add(item.name);
 				if( item.distance < MAX_VALUE )
 				{
-					displayStrings.add(String.format("%s (%dm)", item.name, (int) item.distance));
+					displayStrings.add(String.format(Locale.getDefault(), "%s (%dm)", item.name, (int) item.distance));
 				}
 				else
 				{
-					displayStrings.add(String.format("%s (---)", item.name));
+					displayStrings.add(String.format(Locale.getDefault(),"%s (---)", item.name));
 				}
 			}
 
@@ -798,17 +800,18 @@ public class GpsWayPointsActivity extends GpsActivity
 	{
 		loc.setAltitude(altitude+50);
 	}
-	
+
+	@SuppressLint("SetTextI18n")
 	private void showLocation( Location newLocation )
 	{
 		int		snapedAltitude = getCorrectedAltitude(newLocation);
 		double	longitude = newLocation.getLongitude();
 		double	latitude = newLocation.getLatitude();
-		double	altitude = (int)newLocation.getAltitude();
+		double	altitude = newLocation.getAltitude();
 		m_altitudeView.setText(
 			(isCalibrationMode() ? "*" : " ") +
 			snapedAltitude + "m (" + (int)(altitude+0.5) + ")/" +
-			longitude + '/' + latitude
+			String.format(Locale.getDefault(), "%.6f/%.6f",longitude,latitude)
 		);
 	}
 	

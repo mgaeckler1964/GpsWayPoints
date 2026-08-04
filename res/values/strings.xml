@@ -8,8 +8,8 @@
 
     <string name="savePos">Save Location</string>
     <string name="savePosAs">Save Location with Name &#8230;</string>
-    <string name="loadPos">Load Position &#8230;</string>
-    <string name="deletePos">Delete Position &#8230;</string>
+    <string name="loadPos">Load Waypoint &#8230;</string>
+    <string name="deletePos">Delete Waypoint &#8230;</string>
     <string name="gpsSpeed">GPS Interval</string>
     <string name="gpsSpeedAuto">Automatic</string>
     <string name="saveGpx">Save GPX</string>
@@ -18,15 +18,15 @@
     <string name="calibration">Calibration</string>
     <string name="darkMode">Dark Mode</string>
 
-    <string name="about">Info</string>
+    <string name="about">About GpsWayPoints &#8230;</string>
     <string name="exit">Exit</string>
     
     <string name="statusLabel">State</string>
     <string name="altitudeLabel">Height</string>
     
-    <string name="positionName">Name</string>
-    <string name="positionLongitude">Longitude</string>
-    <string name="positionLatitude">Latitude</string>
+    <string name="nameLabel">Name</string>
+    <string name="longitudeLabel">Longitude</string>
+    <string name="latitudeLabel">Latitude</string>
 
     <string name="confirmDelete">"Do you want to delete %s?"</string>
     <string name="itemsSaved">%1$d items saved to %2$s</string>

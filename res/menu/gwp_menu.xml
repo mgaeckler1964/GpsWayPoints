@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu
   xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:visible="true" android:title="@string/savePos" android:id="@+id/savePos" android:checkable="false" android:checked="false" android:enabled="true"></item>
-    <item android:visible="true" android:title="@string/savePosAs" android:id="@+id/savePosAs" android:checkable="false" android:checked="false" android:enabled="true"></item>
-    <item android:visible="true" android:title="@string/loadPos" android:id="@+id/loadPos" android:checkable="false" android:checked="false" android:enabled="true"></item>
-    <item android:visible="true" android:title="@string/deletePos" android:id="@+id/deletePos" android:checkable="false" android:checked="false" android:enabled="true"></item>
+    <item android:visible="true" android:title="@string/savePos" android:id="@+id/savePos" android:checkable="false" android:checked="false" android:enabled="true"/>
+    <item android:visible="true" android:title="@string/savePosAs" android:id="@+id/savePosAs" android:checkable="false" android:checked="false" android:enabled="true"/>
+    <item android:visible="true" android:title="@string/loadPos" android:id="@+id/loadPos" android:checkable="false" android:checked="false" android:enabled="true"/>
+    <item android:visible="true" android:title="@string/deletePos" android:id="@+id/deletePos" android:checkable="false" android:checked="false" android:enabled="true"/>
     <item android:visible="true" android:title="@string/gpsSpeed" android:checkable="false" android:checked="false" android:enabled="true">
         <menu>
-    		<item android:visible="true" android:title="@string/gpsSpeedAuto" android:id="@+id/autoGps" android:checkable="true" android:checked="false" android:enabled="true"></item>
-    		<item android:visible="true" android:title="10 Hz" android:id="@+id/fastGps" android:checkable="true" android:checked="false" android:enabled="true"></item>
-    		<item android:visible="true" android:title="1 Hz" android:id="@+id/normalGps" android:checkable="true" android:checked="false" android:enabled="true"></item>
-    		<item android:visible="true" android:title="0.1 Hz" android:id="@+id/slowGps" android:checkable="true" android:checked="false" android:enabled="true"></item>
+    		<item android:visible="true" android:title="@string/gpsSpeedAuto" android:id="@+id/autoGps" android:checkable="true" android:checked="false" android:enabled="true"/>
+    		<item android:visible="true" android:title="10 Hz" android:id="@+id/fastGps" android:checkable="true" android:checked="false" android:enabled="true"/>
+    		<item android:visible="true" android:title="1 Hz" android:id="@+id/normalGps" android:checkable="true" android:checked="false" android:enabled="true"/>
+    		<item android:visible="true" android:title="0.1 Hz" android:id="@+id/slowGps" android:checkable="true" android:checked="false" android:enabled="true"/>
     	</menu>
     </item>
-    <item android:visible="true" android:title="@string/saveGpx" android:id="@+id/saveGpx" android:checkable="false" android:checked="false" android:enabled="true"></item>
-    <item android:visible="true" android:title="@string/loadGpx" android:id="@+id/loadGpx" android:checkable="false" android:checked="false" android:enabled="true"></item>
-    <item android:visible="true" android:title="@string/calibration" android:id="@+id/calibration" android:checkable="true" android:checked="false" android:enabled="true"></item>
-    <item android:visible="true" android:title="@string/darkMode" android:id="@+id/darkMode" android:checkable="true" android:checked="false" android:enabled="true"></item>
-    <item android:visible="true" android:title="@string/about" android:id="@+id/about" android:checkable="false" android:checked="false" android:enabled="true"></item>
-    <item android:visible="true" android:title="@string/exit" android:id="@+id/exit" android:checkable="false" android:checked="false" android:enabled="true"></item>
+    <item android:visible="true" android:title="@string/saveGpx" android:id="@+id/saveGpx" android:checkable="false" android:checked="false" android:enabled="true"/>
+    <item android:visible="true" android:title="@string/loadGpx" android:id="@+id/loadGpx" android:checkable="false" android:checked="false" android:enabled="true"/>
+    <item android:visible="true" android:title="@string/calibration" android:id="@+id/calibration" android:checkable="true" android:checked="false" android:enabled="true"/>
+    <item android:visible="true" android:title="@string/darkMode" android:id="@+id/darkMode" android:checkable="true" android:checked="false" android:enabled="true"/>
+    <item android:visible="true" android:title="@string/about" android:id="@+id/about" android:checkable="false" android:checked="false" android:enabled="true"/>
+    <item android:visible="true" android:title="@string/exit" android:id="@+id/exit" android:checkable="false" android:checked="false" android:enabled="true"/>
 </menu>
