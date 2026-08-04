@@ -204,7 +204,7 @@ public class GpsWayPointsActivity extends GpsActivity
 					String homeLongitude = positionLongitude.getText().toString();
 					if( !homeLongitude.isEmpty() )
 					{
-						double longitude = Double.parseDouble(homeLongitude);
+						double longitude = parseInternationalDouble(homeLongitude);
 						if (longitude < -180 || longitude > 180 )
 						{
 							String longitudestyle = getString(R.string.positionLongitude);
@@ -219,7 +219,7 @@ public class GpsWayPointsActivity extends GpsActivity
 					String homeLatitude = positionLatitude.getText().toString();
 					if( !homeLatitude.isEmpty() )
 					{
-						double latitude = Double.parseDouble(homeLatitude);
+						double latitude = parseInternationalDouble(homeLatitude);
 						if (latitude < -90 || latitude > 90 )
 						{
 							String latitudestyle = getString(R.string.positionLatitude);
@@ -234,7 +234,7 @@ public class GpsWayPointsActivity extends GpsActivity
 					String homeAltitude = positionAltitude.getText().toString();
 					if( !homeAltitude.isEmpty() )
 					{
-						double altitude = Double.parseDouble(homeAltitude);
+						double altitude = parseInternationalDouble(homeAltitude);
 						if (altitude < -11000 || altitude > 9000 )
 						{
 							String altitudeLabel = getString(R.string.altitudeLabel);
