@@ -12,6 +12,7 @@
     <string name="deletePos">Delete Waypoint &#8230;</string>
     <string name="gpsSpeed">GPS Interval</string>
     <string name="gpsSpeedAuto">Automatic</string>
+	<string name="trackGps">Track GPS</string>
     <string name="saveGpx">Save GPX</string>
     <string name="loadGpx">Load GPX</string>
     

@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -84,6 +85,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	private static final String	GPS_SPEED_KEY = "gpsInterval";
 	private static final String	LAST_NAME_KEY = "lastName";
 	private static final String	DARK_MODE_KEY = "darkMode";
+	private static final String	TRACK_GPS_KEY = "trackGps";
 
 	private static final String s_filenameExternalPublic = "gpsWayPointsPub.txt";
 	private static final String s_filenameExternalPrivate = "gpsWayPointsPriv.txt";
@@ -100,6 +102,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	String 							m_lastName = null;			// default access
 	Location						m_home = new Location("");	// default access
 	SharedPreferences 				m_waypoints = null;			// default access
+	private boolean					m_trackGps = false;
 
 	public void showMessage( String message, final boolean terminate, DialogCallback callback )
 	{
@@ -151,6 +154,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		String homeStr = settings.getString(HOME_KEY,"");
 		m_lastName = settings.getString(LAST_NAME_KEY,"");
 		m_darkMode = settings.getBoolean(DARK_MODE_KEY,false);
+		m_trackGps = settings.getBoolean(TRACK_GPS_KEY,false);
 		int gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
 
 		Location tmpLocation = locationString(homeStr);
@@ -487,7 +491,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		menu.findItem(R.id.fastGps).setChecked(gpsInterval==FAST_GPS);
 		menu.findItem(R.id.normalGps).setChecked(gpsInterval==NORMAL_GPS);
 		menu.findItem(R.id.slowGps).setChecked(gpsInterval==SLOW_GPS);
-		
+		menu.findItem(R.id.trackGps).setChecked(m_trackGps);
+
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -591,6 +596,20 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 	}
 
+	private void saveGpxTrack()
+	{
+		try
+		{
+			if( m_trackGps )
+			{
+				createGpxFile();
+			}
+		}
+		catch(IOException e)
+		{
+				// ignore
+		}
+	}
 	@Override
 	public boolean onOptionsItemSelected( MenuItem item )
 	{
@@ -611,6 +630,11 @@ public class GpsWayPointsActivity extends GpsActivity
 		else if( itemId == R.id.savePos )
 		{
 			savePos();
+		}
+		else if( itemId == R.id.trackGps )
+		{
+			saveGpxTrack();
+			m_trackGps = !m_trackGps;
 		}
 		else if( itemId == R.id.saveGpx )
 		{
@@ -647,6 +671,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 		else if( itemId ==  R.id.exit )
 		{
+			saveGpxTrack();
+			m_trackGps = false;
 			finish();
 		}
 		else if( itemId == R.id.about )
@@ -770,6 +796,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		editor.putString(HOME_KEY, locationString(m_home) );
 		editor.putString(LAST_NAME_KEY, m_lastName);
 		editor.putBoolean(DARK_MODE_KEY, m_darkMode);
+		editor.putBoolean(TRACK_GPS_KEY, m_trackGps);
+
 		editor.putInt(GPS_SPEED_KEY, getInterval() );
 
 		editor.apply();
@@ -789,16 +817,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 
 		super.onPause();
-	}
-
-	// correction valid for Linz/Austria
-	static private int getCorrectedAltitude( Location loc )
-	{
-		return (int)loc.getAltitude()-50;
-	}
-	static void setCorrectedAltitude( Location loc, double altitude )
-	{
-		loc.setAltitude(altitude+50);
 	}
 
 	@SuppressLint("SetTextI18n")
@@ -920,5 +938,9 @@ public class GpsWayPointsActivity extends GpsActivity
 		);
 
 		showLocation(newLocation);
+		if( m_trackGps )
+		{
+			appendTrackPoint2XML(newLocation);
+		}
 	}
 }

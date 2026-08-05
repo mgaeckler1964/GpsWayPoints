@@ -8,6 +8,7 @@
     <string name="deletePos">Wegpunkt löschen &#8230;</string>
     <string name="gpsSpeed">GPS Intervall</string>
     <string name="gpsSpeedAuto">Automatik</string>
+	<string name="trackGps">Weg aufzeichnen</string>
     <string name="saveGpx">GPX speichern</string>
     <string name="loadGpx">GPX laden</string>
     
