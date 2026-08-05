@@ -295,7 +295,10 @@ public abstract class GpsActivity extends MyActivity
 			{
 				// User said NO.
 				// NOW you can call finish() because the app truly cannot work.
-				finish();
+				if(requestCode == LOCATION_PERMISSION_REQUEST_CODE)
+					showMessage(0, getLocalClassName(), "Fine Location Permission Missing!", true, null);
+				else
+					finish();
 			}
 		}
 	}
