@@ -51,4 +51,9 @@
     <string name="deleteWayPoint">Delete Waypoint</string>
 
     <string name="accuracy_format">%1$s Accuracy: %2$.3fm %3$d/%4$d</string>
+
+	<string name="error">Error</string>
+    <string name="fileNotFound">File Not Found</string>
+
+    <string name="enterName">Enter a Name:</string>
 </resources>

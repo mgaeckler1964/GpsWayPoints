@@ -45,4 +45,9 @@
     <string name="deleteWayPoint">Wegpunkt löschen</string>
 
     <string name="accuracy_format">%1$s Genauigkeit: %2$.3fm  %3$d/%4$d</string>
+
+	<string name="error">Fehler</string>
+	<string name="fileNotFound">Datei nicht gefunden.</string>
+
+    <string name="enterName">Geben Sie hier einen Namen ein:</string>
 </resources>

@@ -33,7 +33,6 @@ package at.gaeckler.GpsWayPoints;
 import static java.lang.Double.MAX_VALUE;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -279,10 +278,10 @@ public class GpsWayPointsActivity extends GpsActivity
 		LayoutInflater layoutInflater = getLayoutInflater();
 		final View view = layoutInflater.inflate(R.layout.save_position, null);
 		final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-		alertDialog.setTitle("Position speichern");
+		alertDialog.setTitle(getString(R.string.savePos));
 		alertDialog.setIcon(R.drawable.icon);
 		alertDialog.setCancelable(false);
-		alertDialog.setMessage("Geben Sie hier einen Namen ein:");
+		alertDialog.setMessage(getString(R.string.enterName));
 
 		final EditText positionName = view.findViewById(R.id.positionName);
 		if (m_lastName != null)
@@ -566,29 +565,46 @@ public class GpsWayPointsActivity extends GpsActivity
 	}
 	private void loadWPT()
 	{
-		int itemsLoaded = 0;
-		String source="Public";
+		String	error1 = null;
+		String	error2 = null;
+		int		itemsLoaded = 0;
+		String	source="Public";
 		try
 		{
-			itemsLoaded = loadWaypointFile(true);
+			itemsLoaded = loadWPT2(true);
 		}
 		catch( Exception e)
 		{
-			String str=e.toString();
-			System.out.println(str);
+			error1=e.toString();
 			try
 			{
-				itemsLoaded = loadWaypointFile(false);
+				itemsLoaded = loadWPT2(false);
 				source="Private";
 			}
 			catch( Exception e2 )
 			{
-				String str2=e2.toString();
-				System.out.println(str2);
+				if( e instanceof FileNotFoundException )
+				{
+					error1 = getString(R.string.fileNotFound);
+					error2 = error1;
+				}
+				else
+					error2=e2.toString();
 			}
 		}
-		String message = getString(R.string.itemsLoaded, itemsLoaded, source);
-		showMessage( message );
+		if( error2 != null )
+		{
+			if( !error1.equals(error2) )
+			{
+				error1 = error1 + '\n' + error2;
+			}
+			showError(getString(R.string.error), error1);
+		}
+		else
+		{
+			String message = getString(R.string.itemsLoaded, itemsLoaded, source);
+			showMessage(message);
+		}
 	}
 	private void calibration()
 	{
@@ -703,24 +719,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		invalidateOptionsMenu();
 	}
 
-	private File getExternalFileName( boolean pub, String fileName )
-	{
-		File dir = pub
-				? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-				: getExternalFilesDir(null);
-
-		System.out.println(dir.getPath());
-		if( !dir.exists() )
-		{
-			dir.mkdir();
-		}
-		File file = new File(dir, fileName);	// pub ? s_filenameExternalPublic : s_filenameExternalPrivate
-		System.out.println(file.getPath());
-
-		return file;
-	}
-
-	private int loadWaypointFile(boolean pub) throws Exception
+	private int loadWPT2(boolean pub) throws Exception
 	{
 		int itemsLoaded = 0;
 		//Checking the availability state of the External Storage.
@@ -732,16 +731,10 @@ public class GpsWayPointsActivity extends GpsActivity
 			return 0;
 		}
 
-		File file = getExternalFileName(pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
-
-		if( !file.exists() )
-		{
-			throw new FileNotFoundException( file.getPath() );
-		}
 		try(
-			FileInputStream inputStream = new FileInputStream(file);
-			Reader reader = new InputStreamReader ( inputStream );
-			BufferedReader buffer = new BufferedReader ( reader );
+			FileInputStream inputStream = (FileInputStream)openInputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
+			Reader reader = new InputStreamReader( inputStream );
+			BufferedReader buffer = new BufferedReader( reader )
 		)
 		{
 			SharedPreferences.Editor editor = m_waypoints.edit();
@@ -779,11 +772,11 @@ public class GpsWayPointsActivity extends GpsActivity
 
 		{
 			//Create a new file that points to the root directory, with the given name:
-			File file = getExternalFileName(pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
+			//File file = getExternalFileName(pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
 
-			file.createNewFile();
+			//file.createNewFile();
 
-			try( FileOutputStream  outputStream = new FileOutputStream(file, false); )
+			try( FileOutputStream  outputStream = (FileOutputStream)openOutputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate, false); )
 			{
 				Map<String, ?> map = m_waypoints.getAll();
 				Set<String> keys = map.keySet();
@@ -812,11 +805,11 @@ public class GpsWayPointsActivity extends GpsActivity
 			return 0;
 		}
 
-		File file = getExternalFileName(true, s_filenameExternalGpxWayPoints);
+//		File file = getExternalFileName(true, s_filenameExternalGpxWayPoints);
 
-		file.createNewFile();
+//		file.createNewFile();
 
-		try (FileOutputStream os = new FileOutputStream(file, false);
+		try (FileOutputStream os = (FileOutputStream)openOutputStream(true, s_filenameExternalGpxWayPoints, false);
 			 PrintWriter writer = new PrintWriter(os))
 		{
 			writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>");
