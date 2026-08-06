@@ -39,6 +39,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -89,6 +90,7 @@ public class GpsWayPointsActivity extends GpsActivity
 
 	private static final String s_filenameExternalPublic = "gpsWayPointsPub.txt";
 	private static final String s_filenameExternalPrivate = "gpsWayPointsPriv.txt";
+	private static final String s_filenameExternalGpxWayPoints = "gpxWayPoints.gpx";
 
 	private boolean					m_darkMode = false;
 
@@ -314,7 +316,12 @@ public class GpsWayPointsActivity extends GpsActivity
 			}
 		});
 	}
-	
+
+	private void saveHomeAs()
+	{
+		savePositionAs(m_home);
+	}
+
 	private enum SelectorMode { LOAD_POS, DELETE_POS }
 
 	// Simple helper class to hold paired data
@@ -354,7 +361,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		return result;
 	}
 
-	private void selectPosition( final SelectorMode mode )
+	private void selectWayPoint(final SelectorMode mode )
 	{
 		// build the dialog
 		LayoutInflater layoutInflater = getLayoutInflater();
@@ -521,7 +528,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			savePositionAs(lastLocation);
 		}
 	}
-	private void savePos()
+	private void saveHome()
 	{
 		Location lastLocation = getLastLocation();
 		if (lastLocation != null)
@@ -536,6 +543,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		String target="Public";
 		try
 		{
+			saveGpxWPT();
 			itemsSaved = saveWaypointFile(true);
 		}
 		catch( Exception e )
@@ -556,7 +564,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		String message = getString(R.string.itemsSaved, itemsSaved, target);
 		showMessage( message );
 	}
-	private void loadGpx()
+	private void loadWPT()
 	{
 		int itemsLoaded = 0;
 		String source="Public";
@@ -587,12 +595,12 @@ public class GpsWayPointsActivity extends GpsActivity
 		if( isCalibrationMode() )
 		{
 			removeGpsTimer();
-			disableCalibartion();
+			disableCalibration();
 		}
 		else
 		{
 			createGpsTimer(NORMAL_GPS);
-			enableCalibartion();
+			enableCalibration();
 		}
 	}
 
@@ -617,19 +625,23 @@ public class GpsWayPointsActivity extends GpsActivity
 		System.out.println( itemId );
 		if( itemId == R.id.loadPos )
 		{
-			selectPosition(SelectorMode.LOAD_POS);
+			selectWayPoint(SelectorMode.LOAD_POS);
 		}
 		else if( itemId == R.id.deletePos )
 		{
-			selectPosition(SelectorMode.DELETE_POS);
+			selectWayPoint(SelectorMode.DELETE_POS);
 		}
 		else if( itemId == R.id.savePosAs )
 		{
 			savePosAs();
 		}
+		else if( itemId == R.id.saveHomeAs )
+		{
+			saveHomeAs();
+		}
 		else if( itemId == R.id.savePos )
 		{
-			savePos();
+			saveHome();
 		}
 		else if( itemId == R.id.trackGps )
 		{
@@ -640,9 +652,9 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			saveGpx();
 		}
-		else if( itemId == R.id.loadGpx )
+		else if( itemId == R.id.loadWPT )
 		{
-			loadGpx();
+			loadWPT();
 		}
 		else if( itemId == R.id.calibration )
 		{
@@ -691,7 +703,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		invalidateOptionsMenu();
 	}
 
-	private File getExternalFileName( boolean pub )
+	private File getExternalFileName( boolean pub, String fileName )
 	{
 		File dir = pub
 				? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
@@ -702,7 +714,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			dir.mkdir();
 		}
-		File file = new File(dir, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
+		File file = new File(dir, fileName);	// pub ? s_filenameExternalPublic : s_filenameExternalPrivate
 		System.out.println(file.getPath());
 
 		return file;
@@ -720,32 +732,35 @@ public class GpsWayPointsActivity extends GpsActivity
 			return 0;
 		}
 
-		File file = getExternalFileName(pub);
+		File file = getExternalFileName(pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
 
 		if( !file.exists() )
 		{
 			throw new FileNotFoundException( file.getPath() );
 		}
-		FileInputStream inputStream = new FileInputStream(file);
-		Reader reader = new InputStreamReader ( inputStream );
-		BufferedReader buffer = new BufferedReader ( reader );
-		SharedPreferences.Editor editor = m_waypoints.edit();
-
-		while( true )
+		try(
+			FileInputStream inputStream = new FileInputStream(file);
+			Reader reader = new InputStreamReader ( inputStream );
+			BufferedReader buffer = new BufferedReader ( reader );
+		)
 		{
-			String text = buffer.readLine();
-			if( text == null )
+			SharedPreferences.Editor editor = m_waypoints.edit();
+
+			while(true)
 			{
-				break;
+				String text = buffer.readLine();
+				if(text == null)
+				{
+					break;
+				}
+				Location loc = locationString(text);
+				Bundle bundle = loc.getExtras();
+				String name = bundle.getString(NAME_KEY);
+				editor.putString(name, locationString(loc));
+				++itemsLoaded;
 			}
-			Location loc = locationString(text);
-			Bundle bundle = loc.getExtras();
-			String name = bundle.getString(NAME_KEY);
-			editor.putString(name, locationString(loc) );
-			++itemsLoaded;
+			editor.apply();
 		}
-		editor.apply();
-		buffer.close();
 
 		return itemsLoaded;
 	}
@@ -762,28 +777,83 @@ public class GpsWayPointsActivity extends GpsActivity
 			return 0;
 		}
 
-		//Create a new file that points to the root directory, with the given name:
-		File file = getExternalFileName(pub);
-
-		//This point and below is responsible for the write operation
-		FileOutputStream outputStream;
-
-		file.createNewFile();
-		outputStream = new FileOutputStream(file, false);
-
-		Map<String,?> map = m_waypoints.getAll();
-		Set<String> keys = map.keySet();
-		for( String key : keys )
 		{
-			outputStream.write(map.get(key).toString().getBytes());
-			outputStream.write('|');
-			outputStream.write(key.getBytes());
-			outputStream.write(13);
-			++itemsSaved;
+			//Create a new file that points to the root directory, with the given name:
+			File file = getExternalFileName(pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
+
+			file.createNewFile();
+
+			try( FileOutputStream  outputStream = new FileOutputStream(file, false); )
+			{
+				Map<String, ?> map = m_waypoints.getAll();
+				Set<String> keys = map.keySet();
+				for(String key : keys)
+				{
+					outputStream.write(map.get(key).toString().getBytes());
+					outputStream.write('|');
+					outputStream.write(key.getBytes());
+					outputStream.write(13);
+					++itemsSaved;
+				}
+			}
+		}
+		return itemsSaved;
+	}
+
+	private int saveGpxWPT() throws Exception
+	{
+		int itemsSaved=0;
+		//Checking the availability state of the External Storage.
+		String state = Environment.getExternalStorageState();
+		if (!Environment.MEDIA_MOUNTED.equals(state))
+		{
+			//If it isn't mounted - we can't write into it.
+			System.out.println("Not mounted");
+			return 0;
 		}
 
-		outputStream.flush();
-		outputStream.close();
+		File file = getExternalFileName(true, s_filenameExternalGpxWayPoints);
+
+		file.createNewFile();
+
+		try (FileOutputStream os = new FileOutputStream(file, false);
+			 PrintWriter writer = new PrintWriter(os))
+		{
+			writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>");
+			writer.println("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"" + getLocalClassName() + "\" version=\"1.1\">");
+			writer.println("<metadata>");
+			writer.println("<name>" + s_filenameExternalGpxWayPoints + "</name>");
+			writer.println("<desc>Gpx Created with " + getLocalClassName() + " for Android</desc>");
+			writer.println("<author><name>Martin Gäckler</name></author>");
+			writer.println("</metadata>");
+
+			Map<String, ?> map = m_waypoints.getAll();
+			Set<String> keys = map.keySet();
+			for(String key : keys)
+			{
+				Location loc = locationString(m_waypoints.getString(key, ""));
+				if(loc != null)
+				{
+					writer.write("<wpt lon=\"");
+					writer.print(loc.getLongitude());
+					writer.write("\" lat=\"");
+					writer.print(loc.getLatitude());
+					writer.println("\">");
+					writer.write("\t<ele>");
+					writer.print(getCorrectedAltitude(loc));
+					writer.println("</ele>");
+					writer.write("\t<geoidheight>");
+					writer.print(loc.getAltitude());
+					writer.println("</geoidheight>");
+					writer.write("\t<name>");
+					writer.print(key);
+					writer.println("</name>");
+					writer.println("</wpt>");
+					++itemsSaved;
+				}
+			}
+			writer.println("</gpx>");
+		}
 
 		return itemsSaved;
 	}

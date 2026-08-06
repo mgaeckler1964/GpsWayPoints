@@ -2,7 +2,8 @@
 <menu
   xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:visible="true" android:title="@string/savePos" android:id="@+id/savePos" android:checkable="false" android:checked="false" android:enabled="true"/>
-    <item android:visible="true" android:title="@string/savePosAs" android:id="@+id/savePosAs" android:checkable="false" android:checked="false" android:enabled="true"/>
+	<item android:visible="true" android:title="@string/savePosAs" android:id="@+id/savePosAs" android:checkable="false" android:checked="false" android:enabled="true"/>
+	<item android:visible="true" android:title="@string/saveHomeAs" android:id="@+id/saveHomeAs" android:checkable="false" android:checked="false" android:enabled="true"/>
     <item android:visible="true" android:title="@string/loadPos" android:id="@+id/loadPos" android:checkable="false" android:checked="false" android:enabled="true"/>
     <item android:visible="true" android:title="@string/deletePos" android:id="@+id/deletePos" android:checkable="false" android:checked="false" android:enabled="true"/>
     <item android:visible="true" android:title="@string/gpsSpeed" android:checkable="false" android:checked="false" android:enabled="true">
@@ -15,7 +16,7 @@
     </item>
 	<item android:visible="true" android:title="@string/trackGps" android:id="@+id/trackGps" android:checkable="true" android:checked="false" android:enabled="true"/>
 	<item android:visible="true" android:title="@string/saveGpx" android:id="@+id/saveGpx" android:checkable="false" android:checked="false" android:enabled="true"/>
-    <item android:visible="true" android:title="@string/loadGpx" android:id="@+id/loadGpx" android:checkable="false" android:checked="false" android:enabled="true"/>
+    <item android:visible="true" android:title="@string/loadWPT" android:id="@+id/loadWPT" android:checkable="false" android:checked="false" android:enabled="true"/>
     <item android:visible="true" android:title="@string/calibration" android:id="@+id/calibration" android:checkable="true" android:checked="false" android:enabled="true"/>
     <item android:visible="true" android:title="@string/darkMode" android:id="@+id/darkMode" android:checkable="true" android:checked="false" android:enabled="true"/>
     <item android:visible="true" android:title="@string/about" android:id="@+id/about" android:checkable="false" android:checked="false" android:enabled="true"/>

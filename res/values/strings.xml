@@ -8,13 +8,14 @@
 
     <string name="savePos">Save Location</string>
     <string name="savePosAs">Save Location with Name &#8230;</string>
+    <string name="saveHomeAs">Save Home with Name &#8230;</string>
     <string name="loadPos">Load Waypoint &#8230;</string>
     <string name="deletePos">Delete Waypoint &#8230;</string>
     <string name="gpsSpeed">GPS Interval</string>
     <string name="gpsSpeedAuto">Automatic</string>
 	<string name="trackGps">Track GPS</string>
     <string name="saveGpx">Save GPX</string>
-    <string name="loadGpx">Load GPX</string>
+    <string name="loadWPT">Load WayPoint File</string>
     
     <string name="calibration">Calibration</string>
     <string name="darkMode">Dark Mode</string>
