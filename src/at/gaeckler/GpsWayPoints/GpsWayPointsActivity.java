@@ -100,9 +100,9 @@ public class GpsWayPointsActivity extends GpsActivity
 	
 	private String					m_myStatus = null;
 
-	String 							m_lastName = null;			// default access
-	Location						m_home = new Location("");	// default access
-	SharedPreferences 				m_waypoints = null;			// default access
+	private String 					m_lastName = null;
+	private Location				m_home = new Location("");
+	private SharedPreferences 		m_waypoints = null;
 	private boolean					m_trackGps = false;
 
 	public void showMessage( String message, final boolean terminate, DialogCallback callback )
@@ -776,7 +776,7 @@ public class GpsWayPointsActivity extends GpsActivity
 
 			//file.createNewFile();
 
-			try( FileOutputStream  outputStream = (FileOutputStream)openOutputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate, false); )
+			try( FileOutputStream  outputStream = (FileOutputStream)openOutputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate, false) )
 			{
 				Map<String, ?> map = m_waypoints.getAll();
 				Set<String> keys = map.keySet();

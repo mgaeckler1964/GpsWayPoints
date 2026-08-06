@@ -20,5 +20,5 @@
     <item android:visible="true" android:title="@string/calibration" android:id="@+id/calibration" android:checkable="true" android:checked="false" android:enabled="true"/>
     <item android:visible="true" android:title="@string/darkMode" android:id="@+id/darkMode" android:checkable="true" android:checked="false" android:enabled="true"/>
     <item android:visible="true" android:title="@string/about" android:id="@+id/about" android:checkable="false" android:checked="false" android:enabled="true"/>
-    <item android:visible="true" android:title="@string/exit" android:id="@+id/exit" android:checkable="false" android:checked="false" android:enabled="true"/>
+	<item android:visible="true" android:title="@string/exit" android:id="@+id/exit" android:checkable="false" android:checked="false" android:enabled="true"/>
 </menu>

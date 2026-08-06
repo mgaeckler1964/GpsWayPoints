@@ -21,8 +21,8 @@ android {
 		applicationId "at.gaeckler.GpsWayPoints"
 		minSdk 26
 		targetSdk 36
-		versionCode 11
-		versionName "4.8.5"
+		versionCode 12
+		versionName "4.8.6"
 		resValue "string", "app_version", "\"${versionName}\""
 	}
 

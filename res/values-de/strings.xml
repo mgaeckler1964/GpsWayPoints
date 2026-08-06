@@ -10,8 +10,8 @@
     <string name="gpsSpeed">GPS Intervall</string>
     <string name="gpsSpeedAuto">Automatik</string>
 	<string name="trackGps">Weg aufzeichnen</string>
-    <string name="saveGpx">GPX speichern</string>
-    <string name="loadWPT">Webpunktdatei laden</string>
+    <string name="saveGpx">GPX Wegpunkte speichern</string>
+    <string name="loadWPT">Wegpunktdatei laden</string>
     
     <string name="calibration">Kalibrierung</string>
     <string name="darkMode">Darkmode</string>
@@ -29,7 +29,7 @@
     <string name="itemsSaved">%1$d Postion(en) gespeichert in %2$s</string>
     <string name="itemsLoaded">%1$d Postion(en) geladen von %2$s</string>
 
-    <string name="invalidRange1">Ungültiger Wert für %1$s</string>
+    <string name="invalidRange1">Ungültiger Wert für $s</string>
     <string name="invalidRange3">Ungültiger Wert für %1$s [%2$d, %3$d]</string>
     <string name="unknown">Unbekannt</string>
     <string name="cancelLabel">Abbruch</string>
@@ -37,7 +37,7 @@
     <string name="gpsDisabled">GPS ist abgeschaltet.</string>
     <string name="gpsStarted">GPS gestartet</string>
     <string name="gpsStoped">GPS gestoppt</string>
-    <string name="gpsFirstFix">Erster GPS fix</string>
+    <string name="gpsFirstFix">Erster GPS Fix</string>
     <string name="gpsSatellites2">GPS Satelliten: %1$d/%2$d</string>
 
     <string name="selectWayPoint">Wählen Sie einen Wegpunkt aus:</string>

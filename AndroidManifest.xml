@@ -13,6 +13,7 @@
 		android:allowBackup="true"
 		android:enabled="true"
 		android:supportsRtl="false"
+		android:requestLegacyExternalStorage="true"
 		android:theme="@style/Theme.MyTheme">
 
 		<activity
