@@ -1,22 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">GpsWayPoints</string>
-    <string name="app_copyright">&#169; 2024&#8211;2026 by Martin Gäckler</string>
-    <string name="app_url">https://www.gaeckler.at/</string>
+    <string name="app_name" translatable="false">GpsWayPoints</string>
+    <string name="app_copyright" translatable="false">&#169; 2024&#8211;2026 by Martin Gäckler</string>
+    <string name="app_url" translatable="false">https://www.gaeckler.at/</string>
 
 	<string name="welcome">Welcome</string>
 
+    <string name="location">Location</string>
     <string name="savePos">Save Location</string>
     <string name="savePosAs">Save Location with Name &#8230;</string>
+
+    <string name="waypoint">Waypoint</string>
     <string name="saveHomeAs">Save Home with Name &#8230;</string>
     <string name="loadPos">Load Waypoint &#8230;</string>
     <string name="deletePos">Delete Waypoint &#8230;</string>
+
     <string name="gpsSpeed">GPS Interval</string>
     <string name="gpsSpeedAuto">Automatic</string>
+
 	<string name="trackGps">Track GPS</string>
-    <string name="saveGpx">Save GPX Waypoints</string>
+    <string name="saveWPT">Save GPX Waypoints</string>
     <string name="loadWPT">Load Waypoint File</string>
-    
+
     <string name="calibration">Calibration</string>
     <string name="darkMode">Dark Mode</string>
 
@@ -56,4 +61,9 @@
     <string name="fileNotFound">File Not Found</string>
 
     <string name="enterName">Enter a Name:</string>
+
+    <string name="setup">Setup</string>
+    <string name="selectPublicFolder">Document Folder</string>
+    <string name="selectStorageFolder">GPX Folder</string>
+    <string name="displayStorageManagePermission">Storage Manager</string>
 </resources>

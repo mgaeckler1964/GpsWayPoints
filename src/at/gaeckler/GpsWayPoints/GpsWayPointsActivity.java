@@ -33,11 +33,11 @@ package at.gaeckler.GpsWayPoints;
 import static java.lang.Double.MAX_VALUE;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -57,6 +57,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.location.GnssStatus;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -144,7 +145,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			return;
 		}
 
-		if( requestStoragePermission(R.drawable.icon, "GPS-Waypoints") == RequestCode.rcDenied )
+		if( requestStoragePermission(R.drawable.icon, "GPS-Waypoints") == RequestCode.DENIED )
 		{
 			return;
 		}
@@ -489,6 +490,9 @@ public class GpsWayPointsActivity extends GpsActivity
 		menu.findItem(R.id.savePos).setEnabled(hasLocation);
 		menu.findItem(R.id.savePosAs).setEnabled(hasLocation);
 
+		boolean hasWritePermission = checkWriteStoragePermission();
+		menu.findItem(R.id.trackGps).setEnabled(hasWritePermission);
+
 		menu.findItem(R.id.calibration).setChecked(isCalibrationMode());
 		menu.findItem(R.id.darkMode).setChecked(m_darkMode);
 
@@ -498,6 +502,14 @@ public class GpsWayPointsActivity extends GpsActivity
 		menu.findItem(R.id.normalGps).setChecked(gpsInterval==NORMAL_GPS);
 		menu.findItem(R.id.slowGps).setChecked(gpsInterval==SLOW_GPS);
 		menu.findItem(R.id.trackGps).setChecked(m_trackGps);
+
+		menu.findItem(R.id.selectPublicFolder).setChecked( !hasStorageFolder() && hasWritePermission );
+		menu.findItem(R.id.selectStorageFolder).setChecked( hasStorageFolder() && hasWritePermission );
+
+		if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.R )
+			menu.findItem(R.id.displayStorageManagePermission).setChecked( checkIsExternalStorageManager() );
+		else
+			menu.findItem(R.id.displayStorageManagePermission).setVisible(false);
 
 		return super.onPrepareOptionsMenu(menu);
 	}
@@ -536,7 +548,8 @@ public class GpsWayPointsActivity extends GpsActivity
 			onLocationChanged(lastLocation);
 		}
 	}
-	private void saveGpx()
+
+	private void saveWPT()
 	{
 		int itemsSaved = 0;
 		String target="Public";
@@ -544,6 +557,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			saveGpxWPT();
 			itemsSaved = saveWaypointFile(true);
+			if( hasStorageFolder() )
+				target = getString( R.string.selectStorageFolder );
 		}
 		catch( Exception e )
 		{
@@ -572,6 +587,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		try
 		{
 			itemsLoaded = loadWPT2(true);
+			if( hasStorageFolder() )
+				source = getString( R.string.selectStorageFolder );
 		}
 		catch( Exception e)
 		{
@@ -639,6 +656,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	{
 		int	itemId = item.getItemId();
 		System.out.println( itemId );
+
 		if( itemId == R.id.loadPos )
 		{
 			selectWayPoint(SelectorMode.LOAD_POS);
@@ -659,19 +677,35 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			saveHome();
 		}
+
+		else if( itemId == R.id.displayStorageManagePermission )
+		{
+			displayStorageManagePermission();
+		}
+		else if(itemId == R.id.selectStorageFolder)
+		{
+			selectStorageFolder();
+		}
+		else if(itemId == R.id.selectPublicFolder)
+		{
+			selectPublicFolder();
+			requestStoragePermission(R.drawable.icon, "GPS-Waypoints");
+		}
+
 		else if( itemId == R.id.trackGps )
 		{
 			saveGpxTrack();
 			m_trackGps = !m_trackGps;
 		}
-		else if( itemId == R.id.saveGpx )
+		else if( itemId == R.id.saveWPT )
 		{
-			saveGpx();
+			saveWPT();
 		}
 		else if( itemId == R.id.loadWPT )
 		{
 			loadWPT();
 		}
+
 		else if( itemId == R.id.calibration )
 		{
 			calibration();
@@ -732,9 +766,9 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 
 		try(
-			FileInputStream inputStream = (FileInputStream)openInputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
-			Reader reader = new InputStreamReader( inputStream );
-			BufferedReader buffer = new BufferedReader( reader )
+			InputStream		is = openInputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
+			Reader			reader = new InputStreamReader( is );
+			BufferedReader	buffer = new BufferedReader( reader )
 		)
 		{
 			SharedPreferences.Editor editor = m_waypoints.edit();
@@ -771,12 +805,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 
 		{
-			//Create a new file that points to the root directory, with the given name:
-			//File file = getExternalFileName(pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
-
-			//file.createNewFile();
-
-			try( FileOutputStream  outputStream = (FileOutputStream)openOutputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate, false) )
+			try( OutputStream  outputStream = openOutputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate, false) )
 			{
 				Map<String, ?> map = m_waypoints.getAll();
 				Set<String> keys = map.keySet();
@@ -805,11 +834,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			return 0;
 		}
 
-//		File file = getExternalFileName(true, s_filenameExternalGpxWayPoints);
-
-//		file.createNewFile();
-
-		try (FileOutputStream os = (FileOutputStream)openOutputStream(true, s_filenameExternalGpxWayPoints, false);
+		try (OutputStream os = openOutputStream(true, s_filenameExternalGpxWayPoints, false);
 			 PrintWriter writer = new PrintWriter(os))
 		{
 			writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>");

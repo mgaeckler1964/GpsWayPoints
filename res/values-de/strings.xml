@@ -2,15 +2,20 @@
 <resources>
     <string name="welcome">Willkommen</string>
 
+	<string name="location">Standort</string>
     <string name="savePos">Standort speichern</string>
     <string name="savePosAs">Standort mit Namen speichern &#8230;</string>
-	<string name="saveHomeAs">Ziel mit Namen speichern &#8230;</string>
+
+    <string name="waypoint">Wegpunkt</string>
     <string name="loadPos">Wegpunkt laden &#8230;</string>
     <string name="deletePos">Wegpunkt löschen &#8230;</string>
+    <string name="saveHomeAs">Ziel mit Namen speichern &#8230;</string>
+
     <string name="gpsSpeed">GPS Intervall</string>
     <string name="gpsSpeedAuto">Automatik</string>
 	<string name="trackGps">Weg aufzeichnen</string>
-    <string name="saveGpx">GPX Wegpunkte speichern</string>
+
+    <string name="saveWPT">GPX Wegpunkte speichern</string>
     <string name="loadWPT">Wegpunktdatei laden</string>
     
     <string name="calibration">Kalibrierung</string>
@@ -50,4 +55,8 @@
 	<string name="fileNotFound">Datei nicht gefunden.</string>
 
     <string name="enterName">Geben Sie hier einen Namen ein:</string>
+    <string name="setup">Einrichtung</string>
+    <string name="selectPublicFolder">Dokumentordner</string>
+    <string name="selectStorageFolder">GPX Order</string>
+    <string name="displayStorageManagePermission">Speicher Verwaltung</string>
 </resources>
