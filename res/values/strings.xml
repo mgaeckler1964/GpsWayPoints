@@ -31,7 +31,7 @@
     <string name="statusLabel">State</string>
     <string name="altitudeLabel">Height</string>
     
-    <string name="nameLabel">Name</string>
+    <string name="nameLabel" translatable="false">Name</string>
     <string name="longitudeLabel">Longitude</string>
     <string name="latitudeLabel">Latitude</string>
 
@@ -39,10 +39,10 @@
     <string name="itemsSaved">%1$d items saved to %2$s</string>
     <string name="itemsLoaded">%1$d items loaded from %2$s</string>
 
-    <string name="invalidRange1">Invalid value for $s</string>
+    <string name="invalidRange1">Invalid value for %s</string>
     <string name="invalidRange3">Invalid value for %1$s [%2$d,%3$d]</string>
     <string name="unknown">Unknown</string>
-    <string name="okLabel">OK</string>
+    <string name="okLabel" translatable="false">OK</string>
     <string name="cancelLabel">Cancel</string>
     <string name="gpsEnabled">GPS is enabled.</string>
     <string name="gpsDisabled">GPS is disabled.</string>

@@ -19,10 +19,10 @@ android {
 
 	defaultConfig {
 		applicationId "at.gaeckler.GpsWayPoints"
-		minSdk 26
+		minSdk 26	// 21: required for app compat,. 26: for a smaller APK-Size Android 8 is OK 28: Android 9 the package becomes bigger
 		targetSdk 36
-		versionCode 13
-		versionName "4.8.7"
+		versionCode 14
+		versionName "4.8.8"
 		resValue "string", "app_version", "\"${versionName}\""
 	}
 

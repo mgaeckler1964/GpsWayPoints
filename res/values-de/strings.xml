@@ -34,7 +34,7 @@
     <string name="itemsSaved">%1$d Postion(en) gespeichert in %2$s</string>
     <string name="itemsLoaded">%1$d Postion(en) geladen von %2$s</string>
 
-    <string name="invalidRange1">Ungültiger Wert für $s</string>
+    <string name="invalidRange1">Ungültiger Wert für %s</string>
     <string name="invalidRange3">Ungültiger Wert für %1$s [%2$d, %3$d]</string>
     <string name="unknown">Unbekannt</string>
     <string name="cancelLabel">Abbruch</string>

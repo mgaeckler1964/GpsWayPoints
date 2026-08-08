@@ -60,6 +60,7 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -174,7 +175,6 @@ public class GpsWayPointsActivity extends GpsActivity
 
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-		System.out.println("setContentView");
 		setContentView(R.layout.main);
 
 		m_statusView = findViewById( R.id.statusView );
@@ -184,7 +184,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		m_altitudeView = findViewById( R.id.altitudeView );
 		m_waypointNameView = findViewById( R.id.waypointNameView );
 
-		System.out.println("showSpeed");
 		clearRose();
 
 		updateWaypointName();
@@ -264,9 +263,10 @@ public class GpsWayPointsActivity extends GpsActivity
 
 				ok = true;
 			}
+
 			onLocationChanged(lastLocation);
 		}
-		catch (NumberFormatException e)
+		catch( NumberFormatException e )
 		{
 			String unknownStyle = getString(R.string.unknown);
 			showError( unknownStyle, getString(R.string.invalidRange1, unknownStyle));
@@ -324,17 +324,8 @@ public class GpsWayPointsActivity extends GpsActivity
 
 	private enum SelectorMode { LOAD_POS, DELETE_POS }
 
-	// Simple helper class to hold paired data
-	static final private class PositionItem
-	{
-		String name;
-		double distance;
-		PositionItem(String name, double distance)
-		{
-			this.name = name;
-			this.distance = distance;
-		}
-	}
+	// Simple helper class to hold paired
+	private record PositionItem(String name, double distance) {}
 
 	private Map<String, Double> getDistanceMap( Location current )
 	{
@@ -562,8 +553,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 		catch( Exception e )
 		{
-			String str=e.toString();
-			System.out.println(str);
+			Log.e(getLocalClassName(), "Saving public file failed", e);
 			try
 			{
 				target="Private";
@@ -571,8 +561,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			}
 			catch( Exception e2 )
 			{
-				String str2=e2.toString();
-				System.out.println(str2);
+				Log.e(getLocalClassName(), "Saving private file failed", e2);
 			}
 		}
 		String message = getString(R.string.itemsSaved, itemsSaved, target);
@@ -643,7 +632,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			if( m_trackGps )
 			{
-				createGpxFile();
+				createGpxTrack();
 			}
 		}
 		catch(IOException e)
@@ -655,7 +644,6 @@ public class GpsWayPointsActivity extends GpsActivity
 	public boolean onOptionsItemSelected( MenuItem item )
 	{
 		int	itemId = item.getItemId();
-		System.out.println( itemId );
 
 		if( itemId == R.id.loadPos )
 		{
@@ -761,7 +749,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		if (!Environment.MEDIA_MOUNTED.equals(state))
 		{
 			//If it isn't mounted - we can't write into it.
-			System.out.println("Not mounted");
+			Log.e(getLocalClassName(), "Not mounted");
 			return 0;
 		}
 
@@ -800,7 +788,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		if (!Environment.MEDIA_MOUNTED.equals(state))
 		{
 			//If it isn't mounted - we can't write into it.
-			System.out.println("Not mounted");
+			Log.e(getLocalClassName(), "Not mounted");
 			return 0;
 		}
 
@@ -822,16 +810,15 @@ public class GpsWayPointsActivity extends GpsActivity
 		return itemsSaved;
 	}
 
-	private int saveGpxWPT() throws Exception
+	private void saveGpxWPT() throws Exception
 	{
-		int itemsSaved=0;
 		//Checking the availability state of the External Storage.
 		String state = Environment.getExternalStorageState();
 		if (!Environment.MEDIA_MOUNTED.equals(state))
 		{
 			//If it isn't mounted - we can't write into it.
-			System.out.println("Not mounted");
-			return 0;
+			Log.e(getLocalClassName(), "Not mounted");
+			return;
 		}
 
 		try (OutputStream os = openOutputStream(true, s_filenameExternalGpxWayPoints, false);
@@ -867,13 +854,10 @@ public class GpsWayPointsActivity extends GpsActivity
 					writer.print(key);
 					writer.println("</name>");
 					writer.println("</wpt>");
-					++itemsSaved;
 				}
 			}
 			writer.println("</gpx>");
 		}
-
-		return itemsSaved;
 	}
 
 	private void saveSharedPreferences()
