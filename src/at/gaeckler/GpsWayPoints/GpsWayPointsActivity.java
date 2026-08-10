@@ -78,6 +78,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 
 import at.gaeckler.gps.GpsActivity;
 import at.gaeckler.gps.GpsProcessor;
+import at.gaeckler.gps.GpsUtils;
 
 public class GpsWayPointsActivity extends GpsActivity
 {
@@ -160,7 +161,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		m_trackGps = settings.getBoolean(TRACK_GPS_KEY,false);
 		int gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
 
-		Location tmpLocation = locationString(homeStr);
+		Location tmpLocation = GpsUtils.locationString(homeStr);
 		if( tmpLocation != null )
 		{
 			m_home = tmpLocation;
@@ -252,7 +253,7 @@ public class GpsWayPointsActivity extends GpsActivity
 					}
 				}
 
-				String homeStr = locationString(m_home);
+				String homeStr = GpsUtils.locationString(m_home);
 
 				SharedPreferences.Editor editor = m_waypoints.edit();
 				editor.putString(homeName, homeStr );
@@ -337,7 +338,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			Object value = entry.getValue();
 			if( value instanceof String locationStr )
 			{
-				Location loc = locationString( locationStr );
+				Location loc = GpsUtils.locationString( locationStr );
 				if( loc != null )
 				{
 					result.put( entry.getKey(), (double)current.distanceTo(loc) );
@@ -444,7 +445,7 @@ public class GpsWayPointsActivity extends GpsActivity
 				alertDialog.dismiss();
 				m_lastName = viewItem;
 				updateWaypointName();
-				m_home = locationString(m_waypoints.getString(viewItem, ""));
+				m_home = GpsUtils.locationString(m_waypoints.getString(viewItem, ""));
 				Location last = getLastLocation();
 				if(last != null)                    // do we have a GPS-fix?
 				{
@@ -632,7 +633,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			if( m_trackGps )
 			{
-				createGpxTrack();
+				m_gpsLogger.createGpxTrack(getStartTime());
 			}
 		}
 		catch(IOException e)
@@ -682,8 +683,13 @@ public class GpsWayPointsActivity extends GpsActivity
 
 		else if( itemId == R.id.trackGps )
 		{
-			saveGpxTrack();
-			m_trackGps = !m_trackGps;
+			if( checkWriteStoragePermission() )
+			{
+				saveGpxTrack();
+				m_trackGps = !m_trackGps;
+			}
+			else
+				m_trackGps = false;
 		}
 		else if( itemId == R.id.saveWPT )
 		{
@@ -754,7 +760,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 
 		try(
-			InputStream		is = openInputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
+			InputStream		is = m_gpsLogger.openInputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
 			Reader			reader = new InputStreamReader( is );
 			BufferedReader	buffer = new BufferedReader( reader )
 		)
@@ -768,10 +774,10 @@ public class GpsWayPointsActivity extends GpsActivity
 				{
 					break;
 				}
-				Location loc = locationString(text);
+				Location loc = GpsUtils.locationString(text);
 				Bundle bundle = loc.getExtras();
-				String name = bundle.getString(NAME_KEY);
-				editor.putString(name, locationString(loc));
+				String name = bundle.getString(GpsUtils.NAME_KEY);
+				editor.putString(name, GpsUtils.locationString(loc));
 				++itemsLoaded;
 			}
 			editor.apply();
@@ -793,7 +799,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 
 		{
-			try( OutputStream  outputStream = openOutputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate, false) )
+			try( OutputStream  outputStream = m_gpsLogger.openOutputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate, false) )
 			{
 				Map<String, ?> map = m_waypoints.getAll();
 				Set<String> keys = map.keySet();
@@ -821,7 +827,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			return;
 		}
 
-		try (OutputStream os = openOutputStream(true, s_filenameExternalGpxWayPoints, false);
+		try (OutputStream os = m_gpsLogger.openOutputStream(true, s_filenameExternalGpxWayPoints, false);
 			 PrintWriter writer = new PrintWriter(os))
 		{
 			writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>");
@@ -836,7 +842,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			Set<String> keys = map.keySet();
 			for(String key : keys)
 			{
-				Location loc = locationString(m_waypoints.getString(key, ""));
+				Location loc = GpsUtils.locationString(m_waypoints.getString(key, ""));
 				if(loc != null)
 				{
 					writer.write("<wpt lon=\"");
@@ -865,7 +871,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = settings.edit();
 
-		editor.putString(HOME_KEY, locationString(m_home) );
+		editor.putString(HOME_KEY, GpsUtils.locationString(m_home) );
 		editor.putString(LAST_NAME_KEY, m_lastName);
 		editor.putBoolean(DARK_MODE_KEY, m_darkMode);
 		editor.putBoolean(TRACK_GPS_KEY, m_trackGps);
@@ -1012,7 +1018,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		showLocation(newLocation);
 		if( m_trackGps )
 		{
-			appendTrackPoint2XML(newLocation);
+			m_gpsLogger.appendTrackPoint2XML(newLocation);
 		}
 	}
 }
