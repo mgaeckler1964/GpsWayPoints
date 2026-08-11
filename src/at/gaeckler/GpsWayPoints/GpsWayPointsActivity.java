@@ -157,7 +157,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		String homeStr = settings.getString(HOME_KEY,"");
 		m_lastName = settings.getString(LAST_NAME_KEY,"");
 		m_darkMode = settings.getBoolean(DARK_MODE_KEY,false);
-		int gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
 
 		Location tmpLocation = GpsUtils.locationString(homeStr);
 		if( tmpLocation != null )
@@ -184,8 +183,19 @@ public class GpsWayPointsActivity extends GpsActivity
 		clearRose();
 
 		updateWaypointName();
-		//simulateLocationFix(m_home);
 		switchColorMode();
+	}
+
+	@Override
+	protected void onConfigureService()
+	{
+		super.onConfigureService();
+
+		SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
+		int gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
+		getService().createGpsTimer(gpsInterval);
+		simulateLocationFix(m_home);
+		getService().updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
 	}
 
 	private boolean savePositionAs(
@@ -474,7 +484,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		menu.findItem(R.id.loadPos).setEnabled(hasWayPoints);
 		menu.findItem(R.id.deletePos).setEnabled(hasWayPoints);
 
-		boolean hasLocation = getHasLocation();
+		boolean hasLocation = hasLocation();
 		menu.findItem(R.id.savePos).setEnabled(hasLocation);
 		menu.findItem(R.id.savePosAs).setEnabled(hasLocation);
 
@@ -611,15 +621,19 @@ public class GpsWayPointsActivity extends GpsActivity
 	}
 	private void calibration()
 	{
-		if( getCalibration() )
+		GpsService myService = getService();
+		if( myService != null )
 		{
-			getService().removeGpsTimer();
-			getService().disableCalibration();
-		}
-		else
-		{
-			getService().createGpsTimer(GpsService.NORMAL_GPS);
-			getService().enableCalibration();
+			if(myService.getCalibration())
+			{
+				myService.removeGpsTimer();
+				myService.disableCalibration();
+			}
+			else
+			{
+				myService.createGpsTimer(GpsService.NORMAL_GPS);
+				myService.enableCalibration();
+			}
 		}
 	}
 
@@ -634,6 +648,30 @@ public class GpsWayPointsActivity extends GpsActivity
 				// ignore
 		}
 	}
+
+	private void trackGps()
+	{
+		GpsService service = getService();
+		if( service != null )
+		{
+			if(checkWriteStoragePermission())
+			{
+				if(service.getGpsLogger().getTrackGps())
+				{
+					saveGpxTrack();
+					getService().updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
+				}
+				else
+				{
+					service.getGpsLogger().startTrack();
+					getService().updateNotification(getString(R.string.app_name), getString(R.string.gpsTrackMsg), getClass());
+				}
+			}
+			else
+				service.getGpsLogger().stopTrack();
+		}
+	}
+
 	@Override
 	public boolean onOptionsItemSelected( MenuItem item )
 	{
@@ -676,17 +714,7 @@ public class GpsWayPointsActivity extends GpsActivity
 
 		else if( itemId == R.id.trackGps )
 		{
-			if( checkWriteStoragePermission() )
-			{
-				if( getService().getGpsLogger().getTrackGps() )
-				{
-					saveGpxTrack();
-				}
-				else
-					getService().getGpsLogger().startTrack();
-			}
-			else
-				getService().getGpsLogger().stopTrack();
+			trackGps();
 		}
 		else if( itemId == R.id.saveWPT )
 		{
@@ -734,6 +762,13 @@ public class GpsWayPointsActivity extends GpsActivity
 
 		return super.onOptionsItemSelected(item);
 	}
+
+	@Override
+	protected void onNotificationClick()
+	{
+		trackGps();
+	}
+
 
 	@Override
 	public void onOptionsMenuClosed(Menu menu)

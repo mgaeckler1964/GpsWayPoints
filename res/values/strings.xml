@@ -65,5 +65,8 @@
     <string name="setup">Setup</string>
     <string name="selectPublicFolder">Document Folder</string>
     <string name="selectStorageFolder">GPX Folder</string>
-    <string name="displayStorageManagePermission">Storage Manager</string>
+	<string name="displayStorageManagePermission">Storage Manager</string>
+
+    <string name="notificationMsg">GPS Receiver Active</string>
+    <string name="gpsTrackMsg">GPS Track Recording Active</string>
 </resources>
