@@ -78,6 +78,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 
 import at.gaeckler.gps.GpsActivity;
 import at.gaeckler.gps.GpsProcessor;
+import at.gaeckler.gps.GpsService;
 import at.gaeckler.gps.GpsUtils;
 
 public class GpsWayPointsActivity extends GpsActivity
@@ -88,8 +89,6 @@ public class GpsWayPointsActivity extends GpsActivity
 	private static final String	GPS_SPEED_KEY = "gpsInterval";
 	private static final String	LAST_NAME_KEY = "lastName";
 	private static final String	DARK_MODE_KEY = "darkMode";
-	private static final String	TRACK_GPS_KEY = "trackGps";
-	private static final String	TRACK_START_KEY = "trackStartTime";
 
 	private static final String s_filenameExternalPublic = "gpsWayPointsPub.txt";
 	private static final String s_filenameExternalPrivate = "gpsWayPointsPriv.txt";
@@ -158,10 +157,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		String homeStr = settings.getString(HOME_KEY,"");
 		m_lastName = settings.getString(LAST_NAME_KEY,"");
 		m_darkMode = settings.getBoolean(DARK_MODE_KEY,false);
-		m_gpsLogger.restartTrack(
-			settings.getBoolean(TRACK_GPS_KEY,false),
-			settings.getLong(TRACK_START_KEY,0)
-		);
 		int gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
 
 		Location tmpLocation = GpsUtils.locationString(homeStr);
@@ -175,8 +170,6 @@ public class GpsWayPointsActivity extends GpsActivity
 			m_home.setLatitude(48.298820);
 			GpsUtils.setCorrectedAltitude(m_home, 260);
 		}
-		createGpsTimer(gpsInterval);
-
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 		setContentView(R.layout.main);
@@ -375,7 +368,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		final ArrayList<String> myArray = new ArrayList<>(keys);
 
 		final ListView positionList = view.findViewById(R.id.positionList);
-		Location lastLocation = getLastLocation();
+		Location lastLocation = lastLocation();
 		if( lastLocation != null )
 		{
 			Map<String, Double>	distMap = getDistanceMap(lastLocation);
@@ -449,7 +442,7 @@ public class GpsWayPointsActivity extends GpsActivity
 				m_lastName = viewItem;
 				updateWaypointName();
 				m_home = GpsUtils.locationString(m_waypoints.getString(viewItem, ""));
-				Location last = getLastLocation();
+				Location last = lastLocation();
 				if(last != null)                    // do we have a GPS-fix?
 				{
 					onLocationChanged(last);        // update the display
@@ -492,11 +485,11 @@ public class GpsWayPointsActivity extends GpsActivity
 		menu.findItem(R.id.darkMode).setChecked(m_darkMode);
 
 		int gpsInterval = getInterval();
-		menu.findItem(R.id.autoGps).setChecked(gpsInterval==AUTO_GPS);
-		menu.findItem(R.id.fastGps).setChecked(gpsInterval==FAST_GPS);
-		menu.findItem(R.id.normalGps).setChecked(gpsInterval==NORMAL_GPS);
-		menu.findItem(R.id.slowGps).setChecked(gpsInterval==SLOW_GPS);
-		menu.findItem(R.id.trackGps).setChecked(m_gpsLogger.getTrackGps());
+		menu.findItem(R.id.autoGps).setChecked(gpsInterval== GpsService.AUTO_GPS);
+		menu.findItem(R.id.fastGps).setChecked(gpsInterval==GpsService.FAST_GPS);
+		menu.findItem(R.id.normalGps).setChecked(gpsInterval==GpsService.NORMAL_GPS);
+		menu.findItem(R.id.slowGps).setChecked(gpsInterval==GpsService.SLOW_GPS);
+		menu.findItem(R.id.trackGps).setChecked(getTrackGps());
 
 		menu.findItem(R.id.selectPublicFolder).setChecked( !hasStorageFolder() && hasWritePermission );
 		menu.findItem(R.id.selectStorageFolder).setChecked( hasStorageFolder() && hasWritePermission );
@@ -522,11 +515,11 @@ public class GpsWayPointsActivity extends GpsActivity
 		Location lastLocation;
 		if(getCalibration())
 		{
-			lastLocation = getCalibratedLocation("GPS");
+			lastLocation = getService().getCalibratedLocation("GPS");
 		}
 		else
 		{
-			lastLocation = getLastLocation();
+			lastLocation = lastLocation();
 		}
 
 		if (lastLocation != null)
@@ -536,7 +529,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	}
 	private void saveHome()
 	{
-		Location lastLocation = getLastLocation();
+		Location lastLocation = lastLocation();
 		if (lastLocation != null)
 		{
 			m_home = lastLocation;
@@ -620,13 +613,13 @@ public class GpsWayPointsActivity extends GpsActivity
 	{
 		if( getCalibration() )
 		{
-			removeGpsTimer();
-			disableCalibration();
+			getService().removeGpsTimer();
+			getService().disableCalibration();
 		}
 		else
 		{
-			createGpsTimer(NORMAL_GPS);
-			enableCalibration();
+			getService().createGpsTimer(GpsService.NORMAL_GPS);
+			getService().enableCalibration();
 		}
 	}
 
@@ -634,7 +627,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	{
 		try
 		{
-			m_gpsLogger.createGpxTrack();
+			getService().getGpsLogger().createGpxTrack();
 		}
 		catch(IOException e)
 		{
@@ -685,15 +678,15 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			if( checkWriteStoragePermission() )
 			{
-				if( m_gpsLogger.getTrackGps() )
+				if( getService().getGpsLogger().getTrackGps() )
 				{
 					saveGpxTrack();
 				}
 				else
-					m_gpsLogger.startTrack();
+					getService().getGpsLogger().startTrack();
 			}
 			else
-				m_gpsLogger.stopTrack();
+				getService().getGpsLogger().stopTrack();
 		}
 		else if( itemId == R.id.saveWPT )
 		{
@@ -710,19 +703,19 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 		else if( itemId == R.id.autoGps )
 		{
-			removeGpsTimer();
+			getService().removeGpsTimer();
 		}
 		else if( itemId == R.id.fastGps )
 		{
-			createGpsTimer(FAST_GPS);
+			getService().createGpsTimer(GpsService.FAST_GPS);
 		}
 		else if( itemId == R.id.normalGps )
 		{
-			createGpsTimer(NORMAL_GPS);
+			getService().createGpsTimer(GpsService.NORMAL_GPS);
 		}
 		else if( itemId == R.id.slowGps )
 		{
-			createGpsTimer(SLOW_GPS);
+			getService().createGpsTimer(GpsService.SLOW_GPS);
 		}
 		else if( itemId == R.id.darkMode )
 		{
@@ -763,7 +756,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 
 		try(
-			InputStream		is = m_gpsLogger.openInputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
+			InputStream		is = getService().getGpsLogger().openInputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
 			Reader			reader = new InputStreamReader( is );
 			BufferedReader	buffer = new BufferedReader( reader )
 		)
@@ -802,7 +795,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 
 		{
-			try( OutputStream  outputStream = m_gpsLogger.openOutputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate, false) )
+			try( OutputStream  outputStream = getService().getGpsLogger().openOutputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate, false) )
 			{
 				Map<String, ?> map = m_waypoints.getAll();
 				Set<String> keys = map.keySet();
@@ -830,7 +823,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			return;
 		}
 
-		try (OutputStream os = m_gpsLogger.openOutputStream(true, s_filenameExternalGpxWayPoints, false);
+		try (OutputStream os = getService().getGpsLogger().openOutputStream(true, s_filenameExternalGpxWayPoints, false);
 			 PrintWriter writer = new PrintWriter(os))
 		{
 			writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>");
@@ -877,10 +870,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		editor.putString(HOME_KEY, GpsUtils.locationString(m_home) );
 		editor.putString(LAST_NAME_KEY, m_lastName);
 		editor.putBoolean(DARK_MODE_KEY, m_darkMode);
-		editor.putBoolean(TRACK_GPS_KEY, m_gpsLogger.getTrackGps());
-		editor.putLong(TRACK_START_KEY, m_gpsLogger.getTrackGpsStart());
-
-		editor.putInt(GPS_SPEED_KEY, getInterval() );
 
 		editor.apply();
 	}
@@ -931,13 +920,13 @@ public class GpsWayPointsActivity extends GpsActivity
 	void setStatus( String text )
 	{
 		m_myStatus = text;
-		if(m_statusView != null)
+		if(m_statusView != null && isServiceBound())
 		{
 			m_statusView.setText( getString(
 				R.string.accuracy_format,
 				text,
 				getAccuracy(),
-				getLocationFixCount(),
+				getService().getLocationFixCount(),
 				getNumLocations()
 			));
 		}
@@ -1003,7 +992,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		double distanceHM;
 		if(getCalibration())
 		{
-			Location calibLocation = getCalibratedLocation(newLocation.getProvider());
+			Location calibLocation = getService().getCalibratedLocation(newLocation.getProvider());
 			distance = calibLocation.distanceTo(newLocation);
 			distanceHM = calibLocation.getAltitude()-newLocation.getAltitude();
 		}
@@ -1020,6 +1009,5 @@ public class GpsWayPointsActivity extends GpsActivity
 		);
 
 		showLocation(newLocation);
-		m_gpsLogger.appendTrackPoint2XML(newLocation);
 	}
 }
