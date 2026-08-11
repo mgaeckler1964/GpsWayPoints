@@ -905,6 +905,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		editor.putString(HOME_KEY, GpsUtils.locationString(m_home) );
 		editor.putString(LAST_NAME_KEY, m_lastName);
 		editor.putBoolean(DARK_MODE_KEY, m_darkMode);
+		if( isServiceBound())
+			editor.putInt(GPS_SPEED_KEY, getService().getInterval());
 
 		editor.apply();
 	}
