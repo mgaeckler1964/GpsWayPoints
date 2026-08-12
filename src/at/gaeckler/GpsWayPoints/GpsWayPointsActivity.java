@@ -197,7 +197,15 @@ public class GpsWayPointsActivity extends GpsActivity
 
 		service.createGpsTimer(gpsInterval);
 		simulateLocationFix(m_home);
-		service.updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
+
+		if(service.getGpsLogger().getTrackGps())
+		{
+			getService().updateNotification(getString(R.string.app_name), getString(R.string.gpsTrackMsg), getClass());
+		}
+		else
+		{
+			getService().updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
+		}
 	}
 
 	private boolean savePositionAs(
@@ -619,6 +627,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			showMessage(message);
 		}
 	}
+
 	private void calibration()
 	{
 		GpsService myService = getService();
@@ -626,13 +635,12 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			if(myService.getCalibration())
 			{
-				myService.removeGpsTimer();
 				myService.disableCalibration();
 			}
 			else
 			{
-				myService.createGpsTimer(GpsService.NORMAL_GPS);
 				myService.enableCalibration();
+				myService.createGpsTimer(GpsService.NORMAL_GPS);
 			}
 		}
 	}
