@@ -753,6 +753,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		else if( itemId ==  R.id.exit )
 		{
 			saveGpxTrack();
+			stopGpsService();
 			finish();
 		}
 		else if( itemId == R.id.about )
