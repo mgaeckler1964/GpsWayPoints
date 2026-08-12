@@ -182,7 +182,7 @@ public class GpsWayPointsActivity extends GpsActivity
 
 		clearRose();
 
-		updateWaypointName();
+		updateWaypointName(m_lastName);
 		switchColorMode();
 	}
 
@@ -192,10 +192,12 @@ public class GpsWayPointsActivity extends GpsActivity
 		super.onConfigureService();
 
 		SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
-		int gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
-		getService().createGpsTimer(gpsInterval);
+		GpsService	service = getService();
+		int			gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
+
+		service.createGpsTimer(gpsInterval);
 		simulateLocationFix(m_home);
-		getService().updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
+		service.updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
 	}
 
 	private boolean savePositionAs(
@@ -265,8 +267,7 @@ public class GpsWayPointsActivity extends GpsActivity
 				editor.putString(homeName, homeStr );
 				editor.apply();
 
-				m_lastName = homeName;
-				updateWaypointName();
+				updateWaypointName(homeName);
 
 				ok = true;
 			}
@@ -449,8 +450,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			else if( mode == SelectorMode.LOAD_POS)
 			{
 				alertDialog.dismiss();
-				m_lastName = viewItem;
-				updateWaypointName();
+				updateWaypointName(viewItem);
 				m_home = GpsUtils.locationString(m_waypoints.getString(viewItem, ""));
 				Location last = lastLocation();
 				if(last != null)                    // do we have a GPS-fix?
@@ -959,36 +959,38 @@ public class GpsWayPointsActivity extends GpsActivity
 		m_myStatus = text;
 		if(m_statusView != null && isServiceBound())
 		{
+			GpsService service = getService();
 			m_statusView.setText( getString(
 				R.string.accuracy_format,
 				text,
-				getAccuracy(),
-				getService().getLocationFixCount(),
-				getNumLocations()
+				service.getAccuracy(),
+				service.getLocationFixCount(),
+				service.getNumLocations()
 			));
 		}
 	}
 
-	void updateWaypointName()
+	void updateWaypointName( String theName )
 	{
-		m_waypointNameView.setText(m_lastName);
+		m_lastName = theName;
+		m_waypointNameView.setText(theName);
 	}
 
 	@Override
-	public void onLocationEnabled()
+	protected void onLocationEnabled()
 	{
 		setStatus( getString(R.string.gpsEnabled) );
 	}
 
 	@Override
-	public void onLocationDisabled()
+	protected void onLocationDisabled()
 	{
 		setStatus( getString(R.string.gpsDisabled) );
 		clearRose();
 	}
 	
 	@Override
-	public void onGnssStatusChanged2(int event, GnssStatus status)
+	protected void onGnssStatusChanged2(int event, GnssStatus status)
 	{
 		if(event == GPS_EVENT_STARTED)
 		{
@@ -1020,7 +1022,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	}
 
 	@Override
-	public void onLocationChanged( Location newLocation )
+	protected void onLocationChanged(Location newLocation)
 	{
 		setStatus( m_myStatus );
 		final double absHomeBearing = newLocation.bearingTo(m_home);

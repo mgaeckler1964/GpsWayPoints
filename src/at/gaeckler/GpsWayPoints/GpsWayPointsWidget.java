@@ -120,18 +120,15 @@ public class GpsWayPointsWidget extends View
 			bearingDeg += 360;
 		}
 		
-		final double bearingRad = bearingDeg/180.0*Math.PI; 
-		return bearingRad;
+		return bearingDeg/180.0*Math.PI;
 	}
 	private KompassPos getCirclePosForBearing( double bearingDeg )
 	{
 		final double bearingRAD = getAngleRad( bearingDeg );
 		
-		KompassPos pos = new KompassPos( Math.cos( bearingRAD ), Math.sin( bearingRAD ));
-		
-		return pos;
+		return new KompassPos( Math.cos( bearingRAD ), Math.sin( bearingRAD ));
 	}
-	private KompassPos transferToScreen( KompassPos pos, double factor )
+	private void transferToScreen( KompassPos pos, double factor )
 	{
 		factor *= m_kompassRadius;
 		
@@ -142,13 +139,12 @@ public class GpsWayPointsWidget extends View
 		pos.yPos += m_centerY;
 		
 		pos.yPos = m_kompassHeight-pos.yPos;
-		
-		return pos;
 	}
+
 	private KompassPos getCirclePosForBearing( double bearingDEG, double factor )
 	{
 		KompassPos pos = getCirclePosForBearing( bearingDEG );
-		pos = transferToScreen( pos, factor );
+		transferToScreen( pos, factor );
 
 		return pos;
 	}
