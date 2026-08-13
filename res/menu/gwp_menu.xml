@@ -8,7 +8,7 @@
 	<item android:visible="true" android:title="@string/loadPos" android:id="@+id/loadPos" android:checkable="false" android:checked="false" android:enabled="true"/>
 	<item android:visible="true" android:title="@string/deletePos" android:id="@+id/deletePos" android:checkable="false" android:checked="false" android:enabled="true"/>
 
-    <item android:visible="true" android:title="@string/gpsSpeed" android:checkable="false" android:checked="false" android:enabled="true">
+    <item android:visible="true" android:title="@string/gpsSpeed" android:id="@+id/gpsSpeed" android:checkable="false" android:checked="false" android:enabled="true">
         <menu>
     		<item android:visible="true" android:title="@string/gpsSpeedAuto" android:id="@+id/autoGps" android:checkable="true" android:checked="false" android:enabled="true"/>
     		<item android:visible="true" android:title="10 Hz" android:id="@+id/fastGps" android:checkable="true" android:checked="false" android:enabled="true"/>

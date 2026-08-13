@@ -492,22 +492,28 @@ public class GpsWayPointsActivity extends GpsActivity
 		menu.findItem(R.id.loadPos).setEnabled(hasWayPoints);
 		menu.findItem(R.id.deletePos).setEnabled(hasWayPoints);
 
-		boolean hasLocation = hasLocation();
+		boolean gpsEnabled = isGpsEnabled();
+		boolean hasLocation = gpsEnabled && hasLocation();
 		menu.findItem(R.id.savePos).setEnabled(hasLocation);
 		menu.findItem(R.id.savePosAs).setEnabled(hasLocation);
 
 		boolean hasWritePermission = checkWriteStoragePermission();
-		menu.findItem(R.id.trackGps).setEnabled(hasWritePermission);
+		menu.findItem(R.id.trackGps).setEnabled(hasWritePermission&&gpsEnabled);
 
+		menu.findItem(R.id.calibration).setEnabled(gpsEnabled);
 		menu.findItem(R.id.calibration).setChecked(getCalibration());
 		menu.findItem(R.id.darkMode).setChecked(m_darkMode);
 
-		int gpsInterval = getInterval();
-		menu.findItem(R.id.autoGps).setChecked(gpsInterval== GpsService.AUTO_GPS);
-		menu.findItem(R.id.fastGps).setChecked(gpsInterval==GpsService.FAST_GPS);
-		menu.findItem(R.id.normalGps).setChecked(gpsInterval==GpsService.NORMAL_GPS);
-		menu.findItem(R.id.slowGps).setChecked(gpsInterval==GpsService.SLOW_GPS);
-		menu.findItem(R.id.trackGps).setChecked(getTrackGps());
+		menu.findItem(R.id.gpsSpeed).setEnabled(gpsEnabled);
+		if( gpsEnabled )
+		{
+			int gpsInterval = getInterval();
+			menu.findItem(R.id.autoGps).setChecked(gpsInterval == GpsService.AUTO_GPS);
+			menu.findItem(R.id.fastGps).setChecked(gpsInterval == GpsService.FAST_GPS);
+			menu.findItem(R.id.normalGps).setChecked(gpsInterval == GpsService.NORMAL_GPS);
+			menu.findItem(R.id.slowGps).setChecked(gpsInterval == GpsService.SLOW_GPS);
+			menu.findItem(R.id.trackGps).setChecked(getTrackGps());
+		}
 
 		menu.findItem(R.id.selectPublicFolder).setChecked( !hasStorageFolder() && hasWritePermission );
 		menu.findItem(R.id.selectStorageFolder).setChecked( hasStorageFolder() && hasWritePermission );
@@ -966,16 +972,21 @@ public class GpsWayPointsActivity extends GpsActivity
 	void setStatus( String text )
 	{
 		m_myStatus = text;
-		if(m_statusView != null && isServiceBound())
+		if(m_statusView != null )
 		{
-			GpsService service = getService();
-			m_statusView.setText( getString(
+			if( isServiceBound() && isGpsEnabled() )
+			{
+				GpsService service = getService();
+				m_statusView.setText( getString(
 				R.string.accuracy_format,
 				text,
 				service.getAccuracy(),
 				service.getLocationFixCount(),
 				service.getNumLocations()
 			));
+			}
+			else
+				m_statusView.setText(text);
 		}
 	}
 
