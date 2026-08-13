@@ -186,6 +186,26 @@ public class GpsWayPointsActivity extends GpsActivity
 		switchColorMode();
 	}
 
+	private void updateNotification()
+	{
+		GpsService	service = getService();
+		if( service != null )
+		{
+			if(!service.isGpsEnabled())
+			{
+				service.updateNotification(getString(R.string.app_name), getString(R.string.gpsDisabled), getClass());
+			}
+			else if(service.getGpsLogger().getTrackGps())
+			{
+				service.updateNotification(getString(R.string.app_name), getString(R.string.gpsTrackMsg), getClass());
+			}
+			else
+			{
+				service.updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
+			}
+		}
+	}
+
 	@Override
 	protected void onConfigureService()
 	{
@@ -197,15 +217,7 @@ public class GpsWayPointsActivity extends GpsActivity
 
 		service.createGpsTimer(gpsInterval);
 		simulateLocationFix(m_home);
-
-		if(service.getGpsLogger().getTrackGps())
-		{
-			getService().updateNotification(getString(R.string.app_name), getString(R.string.gpsTrackMsg), getClass());
-		}
-		else
-		{
-			getService().updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
-		}
+		updateNotification();
 	}
 
 	private boolean savePositionAs(
@@ -666,7 +678,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	private void trackGps()
 	{
 		GpsService service = getService();
-		if( service != null )
+		if( service != null && isGpsEnabled() )
 		{
 			if(checkWriteStoragePermission())
 			{
@@ -1000,6 +1012,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	protected void onLocationEnabled()
 	{
 		setStatus( getString(R.string.gpsEnabled) );
+		updateNotification();
 	}
 
 	@Override
@@ -1007,6 +1020,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	{
 		setStatus( getString(R.string.gpsDisabled) );
 		clearRose();
+		updateNotification();
 	}
 	
 	@Override
