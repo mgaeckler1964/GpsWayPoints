@@ -55,6 +55,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.location.GnssStatus;
 import android.location.Location;
 import android.os.Build;
@@ -76,6 +77,15 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatDelegate;
 
+import org.osmdroid.api.IMapController;
+import org.osmdroid.config.Configuration;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.Polyline;
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
+
 import at.gaeckler.gps.GpsActivity;
 import at.gaeckler.gps.GpsProcessor;
 import at.gaeckler.gps.GpsService;
@@ -89,6 +99,8 @@ public class GpsWayPointsActivity extends GpsActivity
 	private static final String	GPS_SPEED_KEY = "gpsInterval";
 	private static final String	LAST_NAME_KEY = "lastName";
 	private static final String	DARK_MODE_KEY = "darkMode";
+	private static final String	MAP_MODE_KEY = "mapMode";
+	private static final String FOLLOW_POS_KEY = "followPos";
 
 	private static final String s_filenameExternalPublic = "gpsWayPointsPub.txt";
 	private static final String s_filenameExternalPrivate = "gpsWayPointsPriv.txt";
@@ -106,37 +118,163 @@ public class GpsWayPointsActivity extends GpsActivity
 	private String 					m_lastName = null;
 	private Location				m_home = new Location("");
 	private SharedPreferences 		m_waypoints = null;
+	private boolean 				m_showMap = false;
+	private boolean 				m_followPos = false;
 
-	public void showMessage( String message, final boolean terminate, DialogCallback callback )
+	private void calibration()
 	{
-		String title = getString(R.string.app_name);
-		showMessage( R.drawable.icon, title, message, terminate, callback );
-	}
-	public void showError( String title, String message )
-	{
-		showMessage( R.drawable.error, title, message, false, null );
-	}
-	public void showMessage( String message )
-	{
-		String title = getString(R.string.app_name);
-		showMessage( R.drawable.icon, title, message, false, null );
-	}
-
-	private void switchColorMode()
-	{
-		if( m_darkMode )
+		GpsService myService = getService();
+		if( myService != null )
 		{
-			AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-			m_theRose.useBlackBackground();
+			if(myService.getCalibration())
+			{
+				myService.disableCalibration();
+			}
+			else
+			{
+				myService.enableCalibration();
+				myService.createGpsTimer(GpsService.NORMAL_GPS);
+			}
+		}
+	}
+
+	private void saveGpxTrack()
+	{
+		try
+		{
+			getService().getGpsLogger().createGpxTrack();
+		}
+		catch(IOException e)
+		{
+			// ignore
+		}
+	}
+
+	private void trackGps()
+	{
+		GpsService service = getService();
+		if( service != null && isGpsEnabled() )
+		{
+			if(checkWriteStoragePermission())
+			{
+				if(service.getGpsLogger().getTrackGps())
+				{
+					saveGpxTrack();
+					getService().updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
+				}
+				else
+				{
+					service.getGpsLogger().startTrack();
+					getService().updateNotification(getString(R.string.app_name), getString(R.string.gpsTrackMsg), getClass());
+				}
+			}
+			else
+			{
+				service.getGpsLogger().stopTrack();
+			}
+		}
+	}
+
+	/*
+		--------------------------------------------------------------------------------------------
+			The OSM Map Display
+		--------------------------------------------------------------------------------------------
+	 */
+	private MapView m_mapView = null;
+
+	private void toggleView(boolean showMap)
+	{
+		m_showMap = showMap;
+		if (showMap)
+		{
+			m_theRose.setVisibility(View.GONE);
+			m_mapView.setVisibility(View.VISIBLE);
+			//initOsmDroid(); // Karte initialisieren falls nötig
 		}
 		else
 		{
-			AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-			m_theRose.useWhiteBackground();
+			m_mapView.setVisibility(View.GONE);
+			m_theRose.setVisibility(View.VISIBLE);
 		}
 	}
 
-	/** Called when the activity is first created. */
+	// ...
+	private void createMarker(Location location, String title)
+	{
+		if(m_mapView == null || location == null)
+		{
+			return;
+		}
+
+		GeoPoint point = new GeoPoint(location.getLatitude(), location.getLongitude());
+
+		Marker marker = new Marker(m_mapView);
+		marker.setTitle(title);
+		marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+//			m_locationMarker.setIcon(getResources().getDrawable(R.drawable.icon)); // Dein Icon nutzen
+		m_mapView.getOverlays().add(marker);
+
+		// Position aktualisieren
+		marker.setPosition(point);
+
+		m_mapView.invalidate();
+	}
+
+	private void displayWaypoints()
+	{
+		Map<String,?> map = m_waypoints.getAll();
+		Set<String> keys = map.keySet();
+		for( String key : keys )
+			createMarker(GpsUtils.locationString(m_waypoints.getString(key, "")), key);
+	}
+
+	private void scrollToLocation( Location location )
+	{
+		IMapController mapController = m_mapView.getController();
+		mapController.setCenter(
+				new GeoPoint(location.getLatitude(), location.getLongitude())
+		);
+	}
+
+	private void zoomToLocation(Location location, double zoomLevel )
+	{
+		IMapController mapController = m_mapView.getController();
+		mapController.setZoom(zoomLevel);
+		scrollToLocation(location);
+	}
+
+	private MyLocationNewOverlay m_locationOverlay;
+	private Polyline m_trackLine = null;
+
+
+
+
+
+
+	/*
+		--------------------------------------------------------------------------------------------
+			The Activity Lifecycle
+		--------------------------------------------------------------------------------------------
+	 */
+	private void saveSharedPreferences()
+	{
+		SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = settings.edit();
+
+		editor.putString(HOME_KEY, GpsUtils.locationString(m_home) );
+		editor.putString(LAST_NAME_KEY, m_lastName);
+		editor.putBoolean(DARK_MODE_KEY, m_darkMode);
+		editor.putBoolean(MAP_MODE_KEY, m_showMap);
+		editor.putBoolean(FOLLOW_POS_KEY, m_followPos);
+
+		if(isServiceBound())
+		{
+			editor.putInt(GPS_SPEED_KEY, getService().getInterval());
+		}
+
+		editor.apply();
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -157,6 +295,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		String homeStr = settings.getString(HOME_KEY,"");
 		m_lastName = settings.getString(LAST_NAME_KEY,"");
 		m_darkMode = settings.getBoolean(DARK_MODE_KEY,false);
+		m_showMap = settings.getBoolean(MAP_MODE_KEY,false);
+		m_followPos = settings.getBoolean(FOLLOW_POS_KEY,false);
 
 		Location tmpLocation = GpsUtils.locationString(homeStr);
 		if( tmpLocation != null )
@@ -171,6 +311,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+		Configuration.getInstance().setUserAgentValue(getPackageName());
+
 		setContentView(R.layout.main);
 
 		m_statusView = findViewById( R.id.statusView );
@@ -179,13 +321,242 @@ public class GpsWayPointsActivity extends GpsActivity
 		m_theRose = findViewById( R.id.myRose );
 		m_altitudeView = findViewById( R.id.altitudeView );
 		m_waypointNameView = findViewById( R.id.waypointNameView );
-
 		clearRose();
+
+		m_mapView = findViewById(R.id.mapView);
+		m_locationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), m_mapView);
+		m_locationOverlay.enableMyLocation();
+		m_locationOverlay.setDrawAccuracyEnabled(true);
+		m_mapView.getOverlays().add(m_locationOverlay);
+
+		m_trackLine = new Polyline();
+		m_trackLine.getOutlinePaint().setColor(Color.BLUE); // Farbe der Linie
+		m_trackLine.getOutlinePaint().setStrokeWidth(5.0f); // Dicke der Linie
+		m_mapView.getOverlays().add(m_trackLine);
+
+		zoomToLocation(m_home, 18.5);
+		displayWaypoints();
+
 
 		updateWaypointName(m_lastName);
 		switchColorMode();
+		toggleView(m_showMap);
 	}
 
+	@Override
+	public void onPause()
+	{
+		/*
+		 	if location permission check failed we did not load the last settings
+		 	=> we do not have any usefull data to save and I don't want to overwrite
+		 	the last settings with the default values.
+		 */
+		if( m_theRose != null )
+		{
+			saveSharedPreferences();
+		}
+
+		if(m_mapView != null)
+		{
+			m_mapView.onPause();
+		}
+		super.onPause();
+	}
+
+	@Override
+	public void onResume()
+	{
+		super.onResume();
+		if(m_mapView != null)
+		{
+			m_mapView.onResume();
+		}
+	}
+
+	/*
+		--------------------------------------------------------------------------------------------
+			The Activity Interface
+		--------------------------------------------------------------------------------------------
+	 */
+	@Override
+	public boolean onCreateOptionsMenu( android.view.Menu menu )
+	{
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.gwp_menu, menu);
+
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu)
+	{
+		boolean hasWayPoints = m_waypoints!= null && !m_waypoints.getAll().isEmpty();
+		menu.findItem(R.id.loadPos).setEnabled(hasWayPoints);
+		menu.findItem(R.id.deletePos).setEnabled(hasWayPoints);
+
+		boolean gpsEnabled = isGpsEnabled();
+		boolean hasLocation = gpsEnabled && hasLocation();
+		menu.findItem(R.id.savePos).setEnabled(hasLocation);
+		menu.findItem(R.id.savePosAs).setEnabled(hasLocation);
+
+		boolean hasWritePermission = checkWriteStoragePermission();
+		menu.findItem(R.id.trackGps).setEnabled(hasWritePermission&&gpsEnabled);
+
+		menu.findItem(R.id.calibration).setEnabled(gpsEnabled);
+		menu.findItem(R.id.calibration).setChecked(getCalibration());
+		menu.findItem(R.id.darkMode).setChecked(m_darkMode);
+
+		menu.findItem(R.id.gpsSpeed).setEnabled(gpsEnabled);
+		if( gpsEnabled )
+		{
+			int gpsInterval = getInterval();
+			menu.findItem(R.id.autoGps).setChecked(gpsInterval == GpsService.AUTO_GPS);
+			menu.findItem(R.id.fastGps).setChecked(gpsInterval == GpsService.FAST_GPS);
+			menu.findItem(R.id.normalGps).setChecked(gpsInterval == GpsService.NORMAL_GPS);
+			menu.findItem(R.id.slowGps).setChecked(gpsInterval == GpsService.SLOW_GPS);
+			menu.findItem(R.id.trackGps).setChecked(getTrackGps());
+		}
+
+		menu.findItem(R.id.selectPublicFolder).setChecked( !hasStorageFolder() && hasWritePermission );
+		menu.findItem(R.id.selectStorageFolder).setChecked( hasStorageFolder() && hasWritePermission );
+
+		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+		{
+			menu.findItem(R.id.displayStorageManagePermission).setChecked(checkIsExternalStorageManager());
+		}
+		else
+		{
+			menu.findItem(R.id.displayStorageManagePermission).setVisible(false);
+		}
+		menu.findItem(R.id.mapLabel).setChecked(m_showMap);
+		menu.findItem(R.id.followPos).setChecked(m_followPos);
+		menu.findItem(R.id.followPos).setEnabled(m_showMap);
+
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected( MenuItem item )
+	{
+		int	itemId = item.getItemId();
+
+		if( itemId == R.id.loadPos )
+		{
+			selectWayPoint(SelectorMode.LOAD_POS);
+		}
+		else if( itemId == R.id.deletePos )
+		{
+			selectWayPoint(SelectorMode.DELETE_POS);
+		}
+		else if( itemId == R.id.savePosAs )
+		{
+			savePosAs();
+		}
+		else if( itemId == R.id.saveHomeAs )
+		{
+			saveHomeAs();
+		}
+		else if( itemId == R.id.savePos )
+		{
+			saveHome();
+		}
+
+		else if( itemId == R.id.displayStorageManagePermission )
+		{
+			displayStorageManagePermission();
+		}
+		else if(itemId == R.id.selectStorageFolder)
+		{
+			selectStorageFolder();
+		}
+		else if(itemId == R.id.selectPublicFolder)
+		{
+			selectPublicFolder();
+			requestStoragePermission(R.drawable.icon, "GPS-Waypoints");
+		}
+
+		else if( itemId == R.id.trackGps )
+		{
+			trackGps();
+		}
+		else if( itemId == R.id.saveWPT )
+		{
+			saveWPT();
+		}
+		else if( itemId == R.id.loadWPT )
+		{
+			loadWPT();
+		}
+
+		else if( itemId == R.id.calibration )
+		{
+			calibration();
+		}
+		else if( itemId == R.id.autoGps )
+		{
+			getService().removeGpsTimer();
+		}
+		else if( itemId == R.id.fastGps )
+		{
+			getService().createGpsTimer(GpsService.FAST_GPS);
+		}
+		else if( itemId == R.id.normalGps )
+		{
+			getService().createGpsTimer(GpsService.NORMAL_GPS);
+		}
+		else if( itemId == R.id.slowGps )
+		{
+			getService().createGpsTimer(GpsService.SLOW_GPS);
+		}
+		else if( itemId == R.id.darkMode )
+		{
+			m_darkMode = !m_darkMode;
+			switchColorMode();
+		}
+		else if( itemId ==  R.id.exit )
+		{
+			saveGpxTrack();
+			stopGpsService();
+			finish();
+		}
+		else if( itemId == R.id.about )
+		{
+			showAbout();
+		}
+		else if( itemId == R.id.mapLabel )
+		{
+			toggleView(!m_showMap);
+		}
+		else if( itemId == R.id.followPos )
+		{
+			m_followPos = !m_followPos;
+		}
+
+
+
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	protected void onNotificationClick()
+	{
+		trackGps();
+	}
+
+	@Override
+	public void onOptionsMenuClosed(Menu menu)
+	{
+		super.onOptionsMenuClosed(menu);
+		// Workaround for https://issuetracker.google.com/issues/315761686
+		invalidateOptionsMenu();
+	}
+
+
+	/*
+		--------------------------------------------------------------------------------------------
+			The Service Management
+		--------------------------------------------------------------------------------------------
+	 */
 	private void updateNotification()
 	{
 		GpsService	service = getService();
@@ -218,8 +589,26 @@ public class GpsWayPointsActivity extends GpsActivity
 		service.createGpsTimer(gpsInterval);
 		simulateLocationFix(m_home);
 		updateNotification();
+		if( m_trackLine != null)
+		{
+			List<Location> savedPoints = service.getTrackPoints();
+			if (!savedPoints.isEmpty())
+			{
+				for( Location loc : savedPoints )
+				{
+					m_trackLine.addPoint(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+				}
+				m_mapView.invalidate();
+			}
+		}
 	}
 
+
+	/*
+		--------------------------------------------------------------------------------------------
+			The Way Points
+		--------------------------------------------------------------------------------------------
+	 */
 	private boolean savePositionAs(
 		Location lastLocation,
 		EditText positionName,
@@ -302,6 +691,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 		return ok;
 	}
+
 	private void savePositionAs(final Location lastLocation)
 	{
 		LayoutInflater layoutInflater = getLayoutInflater();
@@ -488,64 +878,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		alertDialog.show();
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu( android.view.Menu menu )
-	{
-		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.gwp_menu, menu);
-
-		return super.onCreateOptionsMenu(menu);
-	}
-
-	@Override
-	public boolean onPrepareOptionsMenu(Menu menu)
-	{
-		boolean hasWayPoints = m_waypoints!= null && !m_waypoints.getAll().isEmpty();
-		menu.findItem(R.id.loadPos).setEnabled(hasWayPoints);
-		menu.findItem(R.id.deletePos).setEnabled(hasWayPoints);
-
-		boolean gpsEnabled = isGpsEnabled();
-		boolean hasLocation = gpsEnabled && hasLocation();
-		menu.findItem(R.id.savePos).setEnabled(hasLocation);
-		menu.findItem(R.id.savePosAs).setEnabled(hasLocation);
-
-		boolean hasWritePermission = checkWriteStoragePermission();
-		menu.findItem(R.id.trackGps).setEnabled(hasWritePermission&&gpsEnabled);
-
-		menu.findItem(R.id.calibration).setEnabled(gpsEnabled);
-		menu.findItem(R.id.calibration).setChecked(getCalibration());
-		menu.findItem(R.id.darkMode).setChecked(m_darkMode);
-
-		menu.findItem(R.id.gpsSpeed).setEnabled(gpsEnabled);
-		if( gpsEnabled )
-		{
-			int gpsInterval = getInterval();
-			menu.findItem(R.id.autoGps).setChecked(gpsInterval == GpsService.AUTO_GPS);
-			menu.findItem(R.id.fastGps).setChecked(gpsInterval == GpsService.FAST_GPS);
-			menu.findItem(R.id.normalGps).setChecked(gpsInterval == GpsService.NORMAL_GPS);
-			menu.findItem(R.id.slowGps).setChecked(gpsInterval == GpsService.SLOW_GPS);
-			menu.findItem(R.id.trackGps).setChecked(getTrackGps());
-		}
-
-		menu.findItem(R.id.selectPublicFolder).setChecked( !hasStorageFolder() && hasWritePermission );
-		menu.findItem(R.id.selectStorageFolder).setChecked( hasStorageFolder() && hasWritePermission );
-
-		if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.R )
-			menu.findItem(R.id.displayStorageManagePermission).setChecked( checkIsExternalStorageManager() );
-		else
-			menu.findItem(R.id.displayStorageManagePermission).setVisible(false);
-
-		return super.onPrepareOptionsMenu(menu);
-	}
-
-	private void showAbout()
-	{
-		String name = getString(R.string.app_name);
-		String version = getString(R.string.app_version);
-		String copyright = getString(R.string.app_copyright);
-		String url = getString(R.string.app_url);
-		showMessage( name + " "+version+"\n"+copyright+"\n"+url );
-	}
 	private void savePosAs()
 	{
 		Location lastLocation;
@@ -563,6 +895,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			savePositionAs(lastLocation);
 		}
 	}
+
 	private void saveHome()
 	{
 		Location lastLocation = lastLocation();
@@ -581,8 +914,10 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			saveGpxWPT();
 			itemsSaved = saveWaypointFile(true);
-			if( hasStorageFolder() )
-				target = getString( R.string.selectStorageFolder );
+			if(hasStorageFolder())
+			{
+				target = getString(R.string.selectStorageFolder);
+			}
 		}
 		catch( Exception e )
 		{
@@ -600,6 +935,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		String message = getString(R.string.itemsSaved, itemsSaved, target);
 		showMessage( message );
 	}
+
 	private void loadWPT()
 	{
 		String	error1 = null;
@@ -609,8 +945,10 @@ public class GpsWayPointsActivity extends GpsActivity
 		try
 		{
 			itemsLoaded = loadWPT2(true);
-			if( hasStorageFolder() )
-				source = getString( R.string.selectStorageFolder );
+			if(hasStorageFolder())
+			{
+				source = getString(R.string.selectStorageFolder);
+			}
 		}
 		catch( Exception e)
 		{
@@ -622,13 +960,15 @@ public class GpsWayPointsActivity extends GpsActivity
 			}
 			catch( Exception e2 )
 			{
-				if( e instanceof FileNotFoundException )
+				if(e instanceof FileNotFoundException)
 				{
 					error1 = getString(R.string.fileNotFound);
 					error2 = error1;
 				}
 				else
-					error2=e2.toString();
+				{
+					error2 = e2.toString();
+				}
 			}
 		}
 		if( error2 != null )
@@ -646,165 +986,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 	}
 
-	private void calibration()
-	{
-		GpsService myService = getService();
-		if( myService != null )
-		{
-			if(myService.getCalibration())
-			{
-				myService.disableCalibration();
-			}
-			else
-			{
-				myService.enableCalibration();
-				myService.createGpsTimer(GpsService.NORMAL_GPS);
-			}
-		}
-	}
-
-	private void saveGpxTrack()
-	{
-		try
-		{
-			getService().getGpsLogger().createGpxTrack();
-		}
-		catch(IOException e)
-		{
-				// ignore
-		}
-	}
-
-	private void trackGps()
-	{
-		GpsService service = getService();
-		if( service != null && isGpsEnabled() )
-		{
-			if(checkWriteStoragePermission())
-			{
-				if(service.getGpsLogger().getTrackGps())
-				{
-					saveGpxTrack();
-					getService().updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
-				}
-				else
-				{
-					service.getGpsLogger().startTrack();
-					getService().updateNotification(getString(R.string.app_name), getString(R.string.gpsTrackMsg), getClass());
-				}
-			}
-			else
-				service.getGpsLogger().stopTrack();
-		}
-	}
-
-	@Override
-	public boolean onOptionsItemSelected( MenuItem item )
-	{
-		int	itemId = item.getItemId();
-
-		if( itemId == R.id.loadPos )
-		{
-			selectWayPoint(SelectorMode.LOAD_POS);
-		}
-		else if( itemId == R.id.deletePos )
-		{
-			selectWayPoint(SelectorMode.DELETE_POS);
-		}
-		else if( itemId == R.id.savePosAs )
-		{
-			savePosAs();
-		}
-		else if( itemId == R.id.saveHomeAs )
-		{
-			saveHomeAs();
-		}
-		else if( itemId == R.id.savePos )
-		{
-			saveHome();
-		}
-
-		else if( itemId == R.id.displayStorageManagePermission )
-		{
-			displayStorageManagePermission();
-		}
-		else if(itemId == R.id.selectStorageFolder)
-		{
-			selectStorageFolder();
-		}
-		else if(itemId == R.id.selectPublicFolder)
-		{
-			selectPublicFolder();
-			requestStoragePermission(R.drawable.icon, "GPS-Waypoints");
-		}
-
-		else if( itemId == R.id.trackGps )
-		{
-			trackGps();
-		}
-		else if( itemId == R.id.saveWPT )
-		{
-			saveWPT();
-		}
-		else if( itemId == R.id.loadWPT )
-		{
-			loadWPT();
-		}
-
-		else if( itemId == R.id.calibration )
-		{
-			calibration();
-		}
-		else if( itemId == R.id.autoGps )
-		{
-			getService().removeGpsTimer();
-		}
-		else if( itemId == R.id.fastGps )
-		{
-			getService().createGpsTimer(GpsService.FAST_GPS);
-		}
-		else if( itemId == R.id.normalGps )
-		{
-			getService().createGpsTimer(GpsService.NORMAL_GPS);
-		}
-		else if( itemId == R.id.slowGps )
-		{
-			getService().createGpsTimer(GpsService.SLOW_GPS);
-		}
-		else if( itemId == R.id.darkMode )
-		{
-			m_darkMode = !m_darkMode;
-			switchColorMode();
-		}
-		else if( itemId ==  R.id.exit )
-		{
-			saveGpxTrack();
-			stopGpsService();
-			finish();
-		}
-		else if( itemId == R.id.about )
-		{
-			showAbout();
-		}
-
-		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
-	protected void onNotificationClick()
-	{
-		trackGps();
-	}
-
-
-	@Override
-	public void onOptionsMenuClosed(Menu menu)
-	{
-		super.onOptionsMenuClosed(menu);
-		// Workaround for https://issuetracker.google.com/issues/315761686
-		invalidateOptionsMenu();
-	}
-
 	private int loadWPT2(boolean pub) throws Exception
 	{
 		int itemsLoaded = 0;
@@ -818,9 +999,9 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 
 		try(
-			InputStream		is = getService().getGpsLogger().openInputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
-			Reader			reader = new InputStreamReader( is );
-			BufferedReader	buffer = new BufferedReader( reader )
+				InputStream		is = getService().getGpsLogger().openInputStream( pub, pub ? s_filenameExternalPublic : s_filenameExternalPrivate);
+				Reader			reader = new InputStreamReader( is );
+				BufferedReader	buffer = new BufferedReader( reader )
 		)
 		{
 			SharedPreferences.Editor editor = m_waypoints.edit();
@@ -924,34 +1105,55 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 	}
 
-	private void saveSharedPreferences()
+	void updateWaypointName( String theName )
 	{
-		SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
-		SharedPreferences.Editor editor = settings.edit();
-
-		editor.putString(HOME_KEY, GpsUtils.locationString(m_home) );
-		editor.putString(LAST_NAME_KEY, m_lastName);
-		editor.putBoolean(DARK_MODE_KEY, m_darkMode);
-		if( isServiceBound())
-			editor.putInt(GPS_SPEED_KEY, getService().getInterval());
-
-		editor.apply();
+		m_lastName = theName;
+		m_waypointNameView.setText(theName);
 	}
 
-	@Override
-	public void onPause()
+	/*
+		--------------------------------------------------------------------------------------------
+			UI Elements
+		--------------------------------------------------------------------------------------------
+	 */
+	public void showMessage( String message, final boolean terminate, DialogCallback callback )
 	{
-		/*
-		 	if location permission check failed we did not load the last settings
-		 	=> we do not have any usefull data to save and I don't want to overwrite
-		 	the last settings with the default values.
-		 */
-		if( m_theRose != null )
-		{
-			saveSharedPreferences();
-		}
+		String title = getString(R.string.app_name);
+		showMessage( R.drawable.icon, title, message, terminate, callback );
+	}
 
-		super.onPause();
+	public void showError( String title, String message )
+	{
+		showMessage( R.drawable.error, title, message, false, null );
+	}
+
+	public void showMessage( String message )
+	{
+		String title = getString(R.string.app_name);
+		showMessage( R.drawable.icon, title, message, false, null );
+	}
+
+	private void switchColorMode()
+	{
+		if( m_darkMode )
+		{
+			AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+			m_theRose.useBlackBackground();
+		}
+		else
+		{
+			AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+			m_theRose.useWhiteBackground();
+		}
+	}
+
+	private void showAbout()
+	{
+		String name = getString(R.string.app_name);
+		String version = getString(R.string.app_version);
+		String copyright = getString(R.string.app_copyright);
+		String url = getString(R.string.app_url);
+		showMessage( name + " "+version+"\n"+copyright+"\n"+url );
 	}
 
 	@SuppressLint("SetTextI18n")
@@ -976,6 +1178,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			absHomeBearing, currBearing
 		);
 	}
+
 	void clearRose()
 	{
 		m_theRose.clearMovementDisplay();
@@ -986,28 +1189,29 @@ public class GpsWayPointsActivity extends GpsActivity
 		m_myStatus = text;
 		if(m_statusView != null )
 		{
-			if( isServiceBound() && isGpsEnabled() )
+			if(isServiceBound() && isGpsEnabled())
 			{
 				GpsService service = getService();
-				m_statusView.setText( getString(
-				R.string.accuracy_format,
-				text,
-				service.getAccuracy(),
-				service.getLocationFixCount(),
-				service.getNumLocations()
-			));
+				m_statusView.setText(getString(
+						R.string.accuracy_format,
+						text,
+						service.getAccuracy(),
+						service.getLocationFixCount(),
+						service.getNumLocations()
+				));
 			}
 			else
+			{
 				m_statusView.setText(text);
+			}
 		}
 	}
 
-	void updateWaypointName( String theName )
-	{
-		m_lastName = theName;
-		m_waypointNameView.setText(theName);
-	}
-
+	/*
+		--------------------------------------------------------------------------------------------
+			GPS Events
+		--------------------------------------------------------------------------------------------
+	 */
 	@Override
 	protected void onLocationEnabled()
 	{
@@ -1075,12 +1279,32 @@ public class GpsWayPointsActivity extends GpsActivity
 			distanceHM = m_home.getAltitude()-newLocation.getAltitude();
 		}
 
-		updateRose(
-			getSpeed(),
-			distance, distanceHM,
-			absHomeBearing, getCurBearing()
-		);
+		if (m_trackLine != null)
+		{
+			m_trackLine.addPoint(new GeoPoint(newLocation.getLatitude(), newLocation.getLongitude()));
 
+			if (getService() != null)
+			{
+				getService().addTrackPoint(newLocation);
+			}
+			m_mapView.invalidate();
+		}
+
+		if( m_showMap )
+		{
+			if(m_followPos)
+			{
+				scrollToLocation(newLocation);
+			}
+		}
+		else
+		{
+			updateRose(
+				getSpeed(),
+				distance, distanceHM,
+				absHomeBearing, getCurBearing()
+			);
+		}
 		showLocation(newLocation);
 	}
 }

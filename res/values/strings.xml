@@ -66,6 +66,8 @@
     <string name="selectPublicFolder">Document Folder</string>
     <string name="selectStorageFolder">GPX Folder</string>
 	<string name="displayStorageManagePermission">Storage Manager</string>
+    <string name="mapLabel">Map</string>
+    <string name="followPos">Follow Position</string>
 
     <string name="notificationMsg">GPS Receiver Active</string>
     <string name="gpsTrackMsg">GPS Track Recording Active</string>
