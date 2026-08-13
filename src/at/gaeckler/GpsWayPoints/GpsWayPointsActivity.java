@@ -246,11 +246,6 @@ public class GpsWayPointsActivity extends GpsActivity
 	private MyLocationNewOverlay m_locationOverlay;
 	private Polyline m_trackLine = null;
 
-
-
-
-
-
 	/*
 		--------------------------------------------------------------------------------------------
 			The Activity Lifecycle
@@ -582,14 +577,14 @@ public class GpsWayPointsActivity extends GpsActivity
 	{
 		super.onConfigureService();
 
-		SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
-		GpsService	service = getService();
-		int			gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
+		SharedPreferences	settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
+		GpsService			service = getService();
+		int					gpsInterval = settings.getInt(GPS_SPEED_KEY,0);
 
 		service.createGpsTimer(gpsInterval);
 		simulateLocationFix(m_home);
 		updateNotification();
-		if( m_trackLine != null)
+		if( m_trackLine != null )
 		{
 			List<Location> savedPoints = service.getTrackPoints();
 			if (!savedPoints.isEmpty())
