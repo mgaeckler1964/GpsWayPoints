@@ -47,7 +47,10 @@ or
 http://www.gäckler.de/Software/software.htm#GpsWayPoints (in Germany)
 
 ## Screenshot
-<img width="270" height="585" alt="screen" src="https://github.com/user-attachments/assets/e6b8bc38-5d87-4702-a703-1328bdd11ab4" />
+<img width="270" height="585" alt="GpsWayPoints with Compass" src="https://github.com/user-attachments/assets/e6b8bc38-5d87-4702-a703-1328bdd11ab4" />
+
+<img width="270" height="585" alt="GpsWayPoints with Map" src="https://github.com/user-attachments/assets/273da7ec-9c6f-4b1f-8204-bd30a493df2c" />
+
 
 WayPoints with Dark mode
 

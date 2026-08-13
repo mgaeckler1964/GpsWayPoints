@@ -24,8 +24,8 @@ android {
 		// 28: APK wird größer (unkomprimierte native Libs), dafür schnellerer Start & weniger RAM-Verbrauch.
 		minSdk 28
 		targetSdk 36
-		versionCode 17
-		versionName "4.8.13"
+		versionCode 19
+		versionName "4.8.14"
 		resValue "string", "app_version", "\"${versionName}\""
 	}
 
@@ -68,8 +68,9 @@ android {
 }
 
 dependencies {
-	implementation 'androidx.appcompat:appcompat:1.7.1'
+	implementation 'androidx.appcompat:appcompat:1.8.0'
 	implementation 'androidx.documentfile:documentfile:1.1.0'
+	implementation 'org.osmdroid:osmdroid-android:6.1.20'
 }
 
 configurations.configureEach {

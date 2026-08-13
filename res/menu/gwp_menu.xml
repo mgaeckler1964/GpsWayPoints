@@ -25,6 +25,8 @@
 			<item android:visible="true" android:title="@string/loadWPT" android:id="@+id/loadWPT" android:checkable="false" android:checked="false" android:enabled="true"/>
 			<item android:visible="true" android:title="@string/calibration" android:id="@+id/calibration" android:checkable="true" android:checked="false" android:enabled="true"/>
 			<item android:visible="true" android:title="@string/darkMode" android:id="@+id/darkMode" android:checkable="true" android:checked="false" android:enabled="true"/>
+			<item android:visible="true" android:title="@string/mapLabel" android:id="@+id/mapLabel" android:checkable="true" android:checked="false" android:enabled="true"/>
+			<item android:visible="true" android:title="@string/followPos" android:id="@+id/followPos" android:checkable="true" android:checked="false" android:enabled="true"/>
 			<item android:visible="true" android:title="@string/displayStorageManagePermission" android:id="@+id/displayStorageManagePermission" android:checkable="true" android:checked="false" android:enabled="true"/>
 		</menu>
 	</item>

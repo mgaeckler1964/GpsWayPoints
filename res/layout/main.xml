@@ -27,12 +27,26 @@
 	    android:id="@+id/waypointNameView"
 	    android:textSize="20sp"
 	    android:text="@string/nameLabel"/>
-	
-	<at.gaeckler.GpsWayPoints.GpsWayPointsWidget
-	    android:id="@+id/myRose"
-	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent" 
-    	android:background="#FFFFFF"
-	/>
+
+	<FrameLayout
+		android:id="@+id/container"
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1">
+
+		<at.gaeckler.GpsWayPoints.GpsWayPointsWidget
+			android:id="@+id/myRose"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+			android:background="#FFFFFF"
+		/>
+		<org.osmdroid.views.MapView
+			android:id="@+id/mapView"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:visibility="gone" />
+
+	</FrameLayout>
+
 	
 </LinearLayout>

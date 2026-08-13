@@ -59,6 +59,8 @@
     <string name="selectPublicFolder">Dokumentordner</string>
     <string name="selectStorageFolder">GPX Order</string>
     <string name="displayStorageManagePermission">Speicher Verwaltung</string>
+	<string name="mapLabel">Kartenansicht</string>
+    <string name="followPos">Folge Position</string>
 
 	<string name="notificationMsg">GPS Empfang Aktiv</string>
     <string name="gpsTrackMsg">GPS Track Aufzeichnung Aktiv</string>
