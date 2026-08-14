@@ -13,6 +13,7 @@
     <string name="waypoint">Waypoint</string>
     <string name="saveHomeAs">Save Home with Name &#8230;</string>
     <string name="loadPos">Load Waypoint &#8230;</string>
+    <string name="showPos">Show Waypoint &#8230;</string>
     <string name="deletePos">Delete Waypoint &#8230;</string>
 
     <string name="gpsSpeed">GPS Interval</string>

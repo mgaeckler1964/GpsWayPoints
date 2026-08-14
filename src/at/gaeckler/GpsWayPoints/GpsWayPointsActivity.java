@@ -58,6 +58,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.GnssStatus;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -77,6 +78,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatDelegate;
 
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.util.GeoPoint;
@@ -101,6 +103,9 @@ public class GpsWayPointsActivity extends GpsActivity
 	private static final String	DARK_MODE_KEY = "darkMode";
 	private static final String	MAP_MODE_KEY = "mapMode";
 	private static final String FOLLOW_POS_KEY = "followPos";
+	private static final String MAP_ZOOM_KEY = "mapZoom";
+	private static final String MAP_LONG_KEY = "mapLongitude";
+	private static final String MAP_LAT_KEY = "mapLatitude";
 
 	private static final String s_filenameExternalPublic = "gpsWayPointsPub.txt";
 	private static final String s_filenameExternalPrivate = "gpsWayPointsPriv.txt";
@@ -253,18 +258,26 @@ public class GpsWayPointsActivity extends GpsActivity
 	 */
 	private void saveSharedPreferences()
 	{
-		SharedPreferences settings = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE);
-		SharedPreferences.Editor editor = settings.edit();
+		SharedPreferences.Editor editor = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE).edit();
 
-		editor.putString(HOME_KEY, GpsUtils.locationString(m_home) );
-		editor.putString(LAST_NAME_KEY, m_lastName);
-		editor.putBoolean(DARK_MODE_KEY, m_darkMode);
-		editor.putBoolean(MAP_MODE_KEY, m_showMap);
-		editor.putBoolean(FOLLOW_POS_KEY, m_followPos);
+		editor.putString(HOME_KEY, GpsUtils.locationString(m_home) )
+			.putString(LAST_NAME_KEY, m_lastName)
+			.putBoolean(DARK_MODE_KEY, m_darkMode)
+			.putBoolean(MAP_MODE_KEY, m_showMap)
+			.putBoolean(FOLLOW_POS_KEY, m_followPos)
+		;
 
 		if(isServiceBound())
 		{
 			editor.putInt(GPS_SPEED_KEY, getService().getInterval());
+		}
+
+		if( m_mapView != null )
+		{
+			editor.putFloat(MAP_ZOOM_KEY, (float)m_mapView.getZoomLevelDouble());
+			IGeoPoint center = m_mapView.getMapCenter();
+			editor.putFloat(MAP_LONG_KEY, (float)center.getLongitude());
+			editor.putFloat(MAP_LAT_KEY, (float)center.getLatitude());
 		}
 
 		editor.apply();
@@ -292,6 +305,12 @@ public class GpsWayPointsActivity extends GpsActivity
 		m_darkMode = settings.getBoolean(DARK_MODE_KEY,false);
 		m_showMap = settings.getBoolean(MAP_MODE_KEY,false);
 		m_followPos = settings.getBoolean(FOLLOW_POS_KEY,false);
+		double mapZoom = settings.getFloat(MAP_ZOOM_KEY,18.5f);
+		double mapLongitude = settings.getFloat(MAP_LONG_KEY,14.282733f);
+		double mapLatitude = settings.getFloat(MAP_LAT_KEY,48.298820f);
+		Location mapCenter = new Location(LocationManager.GPS_PROVIDER);
+		mapCenter.setLongitude(mapLongitude);
+		mapCenter.setLatitude(mapLatitude);
 
 		Location tmpLocation = GpsUtils.locationString(homeStr);
 		if( tmpLocation != null )
@@ -300,8 +319,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 		else
 		{
-			m_home.setLongitude(14.282733);
-			m_home.setLatitude(48.298820);
+			m_home.setLongitude(mapLongitude);
+			m_home.setLatitude(mapLatitude);
 			GpsUtils.setCorrectedAltitude(m_home, 260);
 		}
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -325,16 +344,15 @@ public class GpsWayPointsActivity extends GpsActivity
 		m_mapView.getOverlays().add(m_locationOverlay);
 
 		m_trackLine = new Polyline();
-		m_trackLine.getOutlinePaint().setColor(Color.BLUE); // Farbe der Linie
-		m_trackLine.getOutlinePaint().setStrokeWidth(5.0f); // Dicke der Linie
+		m_trackLine.getOutlinePaint().setColor(Color.BLUE);
+		m_trackLine.getOutlinePaint().setStrokeWidth(5.0f);
 		m_mapView.getOverlays().add(m_trackLine);
 
-		zoomToLocation(m_home, 18.5);
+		zoomToLocation(mapCenter, mapZoom);
 		displayWaypoints();
 
-
 		updateWaypointName(m_lastName);
-		switchColorMode();
+		switchColorMode(m_darkMode);
 		toggleView(m_showMap);
 	}
 
@@ -387,6 +405,7 @@ public class GpsWayPointsActivity extends GpsActivity
 	{
 		boolean hasWayPoints = m_waypoints!= null && !m_waypoints.getAll().isEmpty();
 		menu.findItem(R.id.loadPos).setEnabled(hasWayPoints);
+		menu.findItem(R.id.showPos).setEnabled(hasWayPoints);
 		menu.findItem(R.id.deletePos).setEnabled(hasWayPoints);
 
 		boolean gpsEnabled = isGpsEnabled();
@@ -439,6 +458,10 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			selectWayPoint(SelectorMode.LOAD_POS);
 		}
+		else if ( itemId == R.id.showPos )
+		{
+			selectWayPoint(SelectorMode.SHOW_POS);
+		}
 		else if( itemId == R.id.deletePos )
 		{
 			selectWayPoint(SelectorMode.DELETE_POS);
@@ -455,7 +478,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			saveHome();
 		}
-
 		else if( itemId == R.id.displayStorageManagePermission )
 		{
 			displayStorageManagePermission();
@@ -469,7 +491,6 @@ public class GpsWayPointsActivity extends GpsActivity
 			selectPublicFolder();
 			requestStoragePermission(R.drawable.icon, "GPS-Waypoints");
 		}
-
 		else if( itemId == R.id.trackGps )
 		{
 			trackGps();
@@ -482,7 +503,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			loadWPT();
 		}
-
 		else if( itemId == R.id.calibration )
 		{
 			calibration();
@@ -505,8 +525,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 		else if( itemId == R.id.darkMode )
 		{
-			m_darkMode = !m_darkMode;
-			switchColorMode();
+			switchColorMode(!m_darkMode);
 		}
 		else if( itemId ==  R.id.exit )
 		{
@@ -526,8 +545,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			m_followPos = !m_followPos;
 		}
-
-
 
 		return super.onOptionsItemSelected(item);
 	}
@@ -735,7 +752,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		savePositionAs(m_home);
 	}
 
-	private enum SelectorMode { LOAD_POS, DELETE_POS }
+	private enum SelectorMode { LOAD_POS, SHOW_POS, DELETE_POS }
 
 	// Simple helper class to hold paired
 	private record PositionItem(String name, double distance) {}
@@ -862,6 +879,14 @@ public class GpsWayPointsActivity extends GpsActivity
 				{
 					onLocationChanged(last);        // update the display
 				}
+			}
+			else if( mode == SelectorMode.SHOW_POS)
+			{
+				alertDialog.dismiss();
+				Location wp = GpsUtils.locationString(m_waypoints.getString(viewItem, ""));
+				scrollToLocation(wp);
+				if( !m_showMap )
+					toggleView(true);
 			}
 		};
 		positionList.setOnItemClickListener(messageClickedHandler);
@@ -1128,9 +1153,10 @@ public class GpsWayPointsActivity extends GpsActivity
 		showMessage( R.drawable.icon, title, message, false, null );
 	}
 
-	private void switchColorMode()
+	private void switchColorMode(boolean darkMode)
 	{
-		if( m_darkMode )
+		m_darkMode = darkMode;
+		if( darkMode )
 		{
 			AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
 			m_theRose.useBlackBackground();

@@ -47,6 +47,7 @@
 
     <string name="selectWayPoint">Wählen Sie einen Wegpunkt aus:</string>
     <string name="loadWayPoint">Wegpunkt laden</string>
+	<string name="showPos">Wegpunkt zeigen &#8230;</string>
     <string name="deleteWayPoint">Wegpunkt löschen</string>
 
     <string name="accuracy_format">%1$s Genauigkeit: %2$.3fm  %3$d/%4$d</string>
