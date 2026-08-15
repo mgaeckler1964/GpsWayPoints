@@ -77,6 +77,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 
 import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
@@ -111,81 +112,15 @@ public class GpsWayPointsActivity extends GpsActivity
 	private static final String s_filenameExternalPrivate = "gpsWayPointsPriv.txt";
 	private static final String s_filenameExternalGpxWayPoints = "gpxWayPoints.gpx";
 
-	private boolean					m_darkMode = false;
 
-	private GpsWayPointsWidget		m_theRose = null;
-	private TextView				m_statusView = null;
-	private TextView				m_altitudeView = null;
-	private TextView				m_waypointNameView = null;
-	
-	private String					m_myStatus = null;
-
-	private String 					m_lastName = null;
-	private Location				m_home = new Location("");
-	private SharedPreferences 		m_waypoints = null;
+// -------------------------------------------------------------------------------------------------
+//region The OSM Map Display
+// -------------------------------------------------------------------------------------------------
 	private boolean 				m_showMap = false;
 	private boolean 				m_followPos = false;
-
-	private void calibration()
-	{
-		GpsService myService = getService();
-		if( myService != null )
-		{
-			if(myService.getCalibration())
-			{
-				myService.disableCalibration();
-			}
-			else
-			{
-				myService.enableCalibration();
-				myService.createGpsTimer(GpsService.NORMAL_GPS);
-			}
-		}
-	}
-
-	private void saveGpxTrack()
-	{
-		try
-		{
-			getService().getGpsLogger().createGpxTrack();
-		}
-		catch(IOException e)
-		{
-			// ignore
-		}
-	}
-
-	private void trackGps()
-	{
-		GpsService service = getService();
-		if( service != null && isGpsEnabled() )
-		{
-			if(checkWriteStoragePermission())
-			{
-				if(service.getGpsLogger().getTrackGps())
-				{
-					saveGpxTrack();
-					getService().updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
-				}
-				else
-				{
-					service.getGpsLogger().startTrack();
-					getService().updateNotification(getString(R.string.app_name), getString(R.string.gpsTrackMsg), getClass());
-				}
-			}
-			else
-			{
-				service.getGpsLogger().stopTrack();
-			}
-		}
-	}
-
-	/*
-		--------------------------------------------------------------------------------------------
-			The OSM Map Display
-		--------------------------------------------------------------------------------------------
-	 */
-	private MapView m_mapView = null;
+	private MapView					m_mapView = null;
+	private MyLocationNewOverlay	m_locationOverlay;
+	private Polyline				m_trackLine = null;
 
 	private void toggleView(boolean showMap)
 	{
@@ -194,7 +129,6 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			m_theRose.setVisibility(View.GONE);
 			m_mapView.setVisibility(View.VISIBLE);
-			//initOsmDroid(); // Karte initialisieren falls nötig
 		}
 		else
 		{
@@ -203,26 +137,52 @@ public class GpsWayPointsActivity extends GpsActivity
 		}
 	}
 
+	Map<String,Marker> m_markers = new HashMap<>();
+
+	private void updateMarker(Location newLocation)
+	{
+		String provider = newLocation.getProvider();
+		if( !m_markers.containsKey(provider) )
+		{
+			m_markers.put(provider, createMarker(newLocation, provider, true));
+		}
+		else
+		{
+			m_markers.get(provider).setPosition(
+				new GeoPoint(newLocation.getLatitude(), newLocation.getLongitude())
+			);
+		}
+	}
+
 	// ...
-	private void createMarker(Location location, String title)
+	private Marker createMarker(Location location, String title, boolean forCurrentLocation)
 	{
 		if(m_mapView == null || location == null)
 		{
-			return;
+			return null;
 		}
 
 		GeoPoint point = new GeoPoint(location.getLatitude(), location.getLongitude());
 
 		Marker marker = new Marker(m_mapView);
 		marker.setTitle(title);
-		marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-//			m_locationMarker.setIcon(getResources().getDrawable(R.drawable.icon)); // Dein Icon nutzen
+		if( forCurrentLocation )
+		{
+			marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+			marker.setIcon(ContextCompat.getDrawable(this, R.drawable.map_marker));
+		}
+		else
+		{
+			marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+		}
 		m_mapView.getOverlays().add(marker);
 
 		// Position aktualisieren
 		marker.setPosition(point);
 
 		m_mapView.invalidate();
+
+		return marker;
 	}
 
 	private void displayWaypoints()
@@ -230,7 +190,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		Map<String,?> map = m_waypoints.getAll();
 		Set<String> keys = map.keySet();
 		for( String key : keys )
-			createMarker(GpsUtils.locationString(m_waypoints.getString(key, "")), key);
+			createMarker(GpsUtils.locationString(m_waypoints.getString(key, "")), key, false);
 	}
 
 	private void scrollToLocation( Location location )
@@ -247,15 +207,11 @@ public class GpsWayPointsActivity extends GpsActivity
 		mapController.setZoom(zoomLevel);
 		scrollToLocation(location);
 	}
+//endregion
 
-	private MyLocationNewOverlay m_locationOverlay;
-	private Polyline m_trackLine = null;
-
-	/*
-		--------------------------------------------------------------------------------------------
-			The Activity Lifecycle
-		--------------------------------------------------------------------------------------------
-	 */
+// -------------------------------------------------------------------------------------------------
+//region The Activity Lifecycle
+// -------------------------------------------------------------------------------------------------
 	private void saveSharedPreferences()
 	{
 		SharedPreferences.Editor editor = getSharedPreferences(CONFIGURATION_FILE, Context.MODE_PRIVATE).edit();
@@ -385,12 +341,11 @@ public class GpsWayPointsActivity extends GpsActivity
 			m_mapView.onResume();
 		}
 	}
+//endregion
 
-	/*
-		--------------------------------------------------------------------------------------------
-			The Activity Interface
-		--------------------------------------------------------------------------------------------
-	 */
+// -------------------------------------------------------------------------------------------------
+//region The Activity Interface
+// -------------------------------------------------------------------------------------------------
 	@Override
 	public boolean onCreateOptionsMenu( android.view.Menu menu )
 	{
@@ -445,6 +400,8 @@ public class GpsWayPointsActivity extends GpsActivity
 		menu.findItem(R.id.mapLabel).setChecked(m_showMap);
 		menu.findItem(R.id.followPos).setChecked(m_followPos);
 		menu.findItem(R.id.followPos).setEnabled(m_showMap);
+
+		menu.findItem(R.id.extendedGPS).setChecked(isExtendedGpsEnabled());
 
 		return super.onPrepareOptionsMenu(menu);
 	}
@@ -545,6 +502,13 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			m_followPos = !m_followPos;
 		}
+		else if( itemId == R.id.extendedGPS )
+		{
+			if(isExtendedGpsEnabled())
+				getService().useStandardGPS();
+			else
+				getService().useExtendedGPS();
+		}
 
 		return super.onOptionsItemSelected(item);
 	}
@@ -562,13 +526,11 @@ public class GpsWayPointsActivity extends GpsActivity
 		// Workaround for https://issuetracker.google.com/issues/315761686
 		invalidateOptionsMenu();
 	}
+//endregion
 
-
-	/*
-		--------------------------------------------------------------------------------------------
-			The Service Management
-		--------------------------------------------------------------------------------------------
-	 */
+// -------------------------------------------------------------------------------------------------
+//region The Service Management
+// -------------------------------------------------------------------------------------------------
 	private void updateNotification()
 	{
 		GpsService	service = getService();
@@ -614,13 +576,15 @@ public class GpsWayPointsActivity extends GpsActivity
 			}
 		}
 	}
+//endregion
 
+// -------------------------------------------------------------------------------------------------
+//region The Way Points
+// -------------------------------------------------------------------------------------------------
+	private String 					m_lastName = null;
+	private Location				m_home = new Location("");
+	private SharedPreferences 		m_waypoints = null;
 
-	/*
-		--------------------------------------------------------------------------------------------
-			The Way Points
-		--------------------------------------------------------------------------------------------
-	 */
 	private boolean savePositionAs(
 		Location lastLocation,
 		EditText positionName,
@@ -885,8 +849,10 @@ public class GpsWayPointsActivity extends GpsActivity
 				alertDialog.dismiss();
 				Location wp = GpsUtils.locationString(m_waypoints.getString(viewItem, ""));
 				scrollToLocation(wp);
-				if( !m_showMap )
+				if(!m_showMap)
+				{
 					toggleView(true);
+				}
 			}
 		};
 		positionList.setOnItemClickListener(messageClickedHandler);
@@ -1130,12 +1096,18 @@ public class GpsWayPointsActivity extends GpsActivity
 		m_lastName = theName;
 		m_waypointNameView.setText(theName);
 	}
+//endregion
 
-	/*
-		--------------------------------------------------------------------------------------------
-			UI Elements
-		--------------------------------------------------------------------------------------------
-	 */
+// -------------------------------------------------------------------------------------------------
+//region UI Elements
+// -------------------------------------------------------------------------------------------------
+	private GpsWayPointsWidget		m_theRose = null;
+	private TextView				m_statusView = null;
+	private TextView				m_altitudeView = null;
+	private TextView				m_waypointNameView = null;
+	private String					m_myStatus = null;
+	private boolean					m_darkMode = false;
+
 	public void showMessage( String message, final boolean terminate, DialogCallback callback )
 	{
 		String title = getString(R.string.app_name);
@@ -1227,12 +1199,11 @@ public class GpsWayPointsActivity extends GpsActivity
 			}
 		}
 	}
+//endregion
 
-	/*
-		--------------------------------------------------------------------------------------------
-			GPS Events
-		--------------------------------------------------------------------------------------------
-	 */
+// -------------------------------------------------------------------------------------------------
+//region GPS Events
+// -------------------------------------------------------------------------------------------------
 	@Override
 	protected void onLocationEnabled()
 	{
@@ -1283,49 +1254,112 @@ public class GpsWayPointsActivity extends GpsActivity
 	@Override
 	protected void onLocationChanged(Location newLocation)
 	{
-		setStatus( m_myStatus );
-		final double absHomeBearing = newLocation.bearingTo(m_home);
-
-		float distance;
-		double distanceHM;
-		if(getCalibration())
+		if( LocationManager.GPS_PROVIDER.equals(newLocation.getProvider()) )
 		{
-			Location calibLocation = getService().getCalibratedLocation(newLocation.getProvider());
-			distance = calibLocation.distanceTo(newLocation);
-			distanceHM = calibLocation.getAltitude()-newLocation.getAltitude();
-		}
-		else
-		{
-			distance = newLocation.distanceTo(m_home);
-			distanceHM = m_home.getAltitude()-newLocation.getAltitude();
-		}
+			setStatus(m_myStatus);
+			final double absHomeBearing = newLocation.bearingTo(m_home);
 
-		if (m_trackLine != null)
-		{
-			m_trackLine.addPoint(new GeoPoint(newLocation.getLatitude(), newLocation.getLongitude()));
-
-			if (getService() != null)
+			float distance;
+			double distanceHM;
+			if(getCalibration())
 			{
-				getService().addTrackPoint(newLocation);
+				Location calibLocation = getService().getCalibratedLocation(newLocation.getProvider());
+				distance = calibLocation.distanceTo(newLocation);
+				distanceHM = calibLocation.getAltitude() - newLocation.getAltitude();
 			}
-			m_mapView.invalidate();
-		}
-
-		if( m_showMap )
-		{
-			if(m_followPos)
+			else
 			{
-				scrollToLocation(newLocation);
+				distance = newLocation.distanceTo(m_home);
+				distanceHM = m_home.getAltitude() - newLocation.getAltitude();
 			}
+
+			if(m_trackLine != null)
+			{
+				m_trackLine.addPoint(new GeoPoint(newLocation.getLatitude(), newLocation.getLongitude()));
+
+				if(getService() != null)
+				{
+					getService().addTrackPoint(newLocation);
+				}
+				m_mapView.invalidate();
+			}
+
+			if(m_showMap)
+			{
+				if(m_followPos)
+				{
+					scrollToLocation(newLocation);
+				}
+			}
+			else
+			{
+				updateRose(
+						getSpeed(),
+						distance, distanceHM,
+						absHomeBearing, getCurBearing()
+				);
+			}
+			showLocation(newLocation);
 		}
-		else
+		if(m_showMap)
 		{
-			updateRose(
-				getSpeed(),
-				distance, distanceHM,
-				absHomeBearing, getCurBearing()
-			);
+			updateMarker(newLocation);
 		}
-		showLocation(newLocation);
 	}
+
+	private void calibration()
+	{
+		GpsService myService = getService();
+		if( myService != null )
+		{
+			if(myService.getCalibration())
+			{
+				myService.disableCalibration();
+			}
+			else
+			{
+				myService.enableCalibration();
+				myService.createGpsTimer(GpsService.NORMAL_GPS);
+			}
+		}
+	}
+
+	private void saveGpxTrack()
+	{
+		try
+		{
+			getService().getGpsLogger().createGpxTrack();
+		}
+		catch(IOException e)
+		{
+			// ignore
+		}
+	}
+
+	private void trackGps()
+	{
+		GpsService service = getService();
+		if( service != null && isGpsEnabled() )
+		{
+			if(checkWriteStoragePermission())
+			{
+				if(service.getGpsLogger().getTrackGps())
+				{
+					saveGpxTrack();
+					getService().updateNotification(getString(R.string.app_name), getString(R.string.notificationMsg), getClass());
+				}
+				else
+				{
+					service.getGpsLogger().startTrack();
+					getService().updateNotification(getString(R.string.app_name), getString(R.string.gpsTrackMsg), getClass());
+				}
+			}
+			else
+			{
+				service.getGpsLogger().stopTrack();
+			}
+		}
+	}
+//endregion
+
 }
