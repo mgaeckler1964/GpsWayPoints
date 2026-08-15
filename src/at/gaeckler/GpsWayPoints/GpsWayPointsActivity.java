@@ -157,23 +157,18 @@ public class GpsWayPointsActivity extends GpsActivity
 	// ...
 	private Marker createMarker(Location location, String title, boolean forCurrentLocation)
 	{
-		if(m_mapView == null || location == null)
-		{
-			return null;
-		}
-
 		GeoPoint point = new GeoPoint(location.getLatitude(), location.getLongitude());
 
 		Marker marker = new Marker(m_mapView);
 		marker.setTitle(title);
+		marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
 		if( forCurrentLocation )
 		{
-			marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
-			marker.setIcon(ContextCompat.getDrawable(this, R.drawable.map_marker));
+			marker.setIcon(ContextCompat.getDrawable(this, R.drawable.map_pos_marker));
 		}
 		else
 		{
-			marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+			marker.setIcon(ContextCompat.getDrawable(this, R.drawable.map_wp_marker));
 		}
 		m_mapView.getOverlays().add(marker);
 
@@ -516,7 +511,8 @@ public class GpsWayPointsActivity extends GpsActivity
 	@Override
 	protected void onNotificationClick()
 	{
-		trackGps();
+		if(getTrackGps())
+			trackGps();
 	}
 
 	@Override
@@ -1301,7 +1297,7 @@ public class GpsWayPointsActivity extends GpsActivity
 			}
 			showLocation(newLocation);
 		}
-		if(m_showMap)
+		if( m_showMap && isExtendedGpsEnabled() )
 		{
 			updateMarker(newLocation);
 		}
