@@ -63,6 +63,7 @@
 	<string name="mapLabel">Kartenansicht</string>
     <string name="followPos">Folge Position</string>
 	<string name="extendedGPS">Zus. Positionierung</string>
+	<string name="notification">Benachrichtigung</string>
 
 	<string name="notificationMsg">GPS Empfang Aktiv</string>
     <string name="gpsTrackMsg">GPS Track Aufzeichnung Aktiv</string>

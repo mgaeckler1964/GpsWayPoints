@@ -397,6 +397,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		menu.findItem(R.id.followPos).setEnabled(m_showMap);
 
 		menu.findItem(R.id.extendedGPS).setChecked(isExtendedGpsEnabled());
+		menu.findItem(R.id.notification).setChecked(checkNotificationPermission());
 
 		return super.onPrepareOptionsMenu(menu);
 	}
@@ -503,6 +504,10 @@ public class GpsWayPointsActivity extends GpsActivity
 				getService().useStandardGPS();
 			else
 				getService().useExtendedGPS();
+		}
+		else if( itemId == R.id.notification )
+		{
+			openNotificationSettings();
 		}
 
 		return super.onOptionsItemSelected(item);
