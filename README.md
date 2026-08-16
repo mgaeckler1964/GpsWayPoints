@@ -1,6 +1,6 @@
 ﻿# GpsWayPoints
  
-Dieses Programm zeigt die Richtung und die Entfernng zu einem bekannten Punkt auf der Erde, im folgenden mit Ziel bezeichnet. In der Kompassanzeige wird mit dem roten Zeiger die Richtung zu Ziel angezeigt. Der grüne Zeiger zeigt Ihre aktuelle oder letzte Bewegungsrichtung. Unter den Zeigern wird die horizontale und vertikale Entfernung zum Ziel angezeigt. 
+Dieses Programm zeigt die Richtung und die Entfernng zu einem bekannten Punkt auf der Erde, im folgenden mit Ziel bezeichnet. In der Kompassanzeige wird mit dem roten Zeiger die Richtung zum Ziel angezeigt. Der grüne Zeiger zeigt Ihre aktuelle oder letzte Bewegungsrichtung. Unter den Zeigern wird die horizontale und vertikale Entfernung zum Ziel angezeigt. 
 
 Die Funktionen im Menü:
 1. Standort speichern: Merkt sich Ihre aktuelle Position als Ziel und zeigt von nun an die Richtung und Entfernung zum Ziel.
