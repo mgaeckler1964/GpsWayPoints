@@ -18,7 +18,7 @@ Die Funktionen im Menü:
 
 Das Einrichtungsmenü:
 1. Dokumentordner. Speichert und liest alle Dateien aus einen Unterordner im Dokumentenverzeichniss des Telefons. Für Android 10 und älter, werden Sie um Schreib- und Leserechte gebeten. Für Android 11 und neuer müssen Sie die Speicherverwaltung erlauben.
-2. GPX-Ordner. Dies erlaubt es Ihnen, einen Ordner für die Dateioperationen auszuwählen. Wenn Sie das gemacht haben, braucht die Anwendung weder das Recht zur Speicherverwaltung noch das Recht externen Speicher zu Schreiben und zuLesen. 
+2. GPX-Ordner. Dies erlaubt es Ihnen, einen Ordner für die Dateioperationen auszuwählen. Wenn Sie das gemacht haben, braucht die Anwendung weder das Recht zur Speicherverwaltung noch das Recht externen Speicher zu schreiben und zu lesen. 
 3. GPX-Wegpunkte speichern. Speichert die Wegpunkte als Text- und GPX-Datei.
 4. Wegpunktdatei laden. Lädt die Textdatei mit den Wegpunkten.
 5. Kallibrierung. Liest mehrere Positionsangaben und ermittelt den Durchschnitt. Damit sollten  Sie beim Speichern eines Wegpunktes genauere Werte ermitteln.
