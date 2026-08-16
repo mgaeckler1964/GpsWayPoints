@@ -1,6 +1,6 @@
-# GpsWayPoints
+﻿# GpsWayPoints
  
-Dieses Programm zeigt die Richtung und die Entfernng zu einen bekannten 
+Dieses Programm zeigt die Richtung und die Entfernng zu einem bekannten 
 Punkt auf der Erde.
 
 Die Funktionen im Menü:
@@ -9,7 +9,7 @@ Die Funktionen im Menü:
 3. Weg aufzeichnen. Speichert einen GPX-Track Ihres aktuellen Weges. 
 4. Ziel mit Namen Speichern. Speichert den zuletzt geladenen Wegpunkt unter einem neuen Namen.
 5. Wegpunkt zeigen. Zeigt Ihnen einen Wegpunkt, den Sie auswählen können, auf der Karte.
-6. Wegpunkt laden. Lädt einen Wegpunkt, den Sie auswählen können, und verwendet ihn als neues Ziel. Entfernung und Richtung wird Ihnen im Kompass angezeigt.
+6. Wegpunkt laden. Lädt einen Wegpunkt, den Sie auswählen können, und verwendet diesen als neues Ziel. Entfernung und Richtung wird Ihnen im Kompass angezeigt.
 7. Wegpunkt löschen. Löscht einen Wegpunkt.
 8. GPS-Intervall. Hiermit legen Sie fest, wie oft das GPS-Signal gelesen werden soll. Beachten Sie aber, der eingebaute GPS-Empfänger ist oft nicht in der Lage, häufiger als einmal pro Sekunde eine Position zu liefern.
 9. Einrichtung. Zeigt das Einrichtungsmenü. Siehe unten.
@@ -17,12 +17,12 @@ Die Funktionen im Menü:
 11. Beenden. Beendet den GPS-Empfang und die Activity.
 
 Das Einrichtungsmenü:
-1. Dokumentordner. Speichert und liest alle Dateien aus einen Unterordner im Dokumentenverzeichniss des Telefons. Für Android 10 und älter, werden Sie um Schreib- und Leserechte gebeten. Für Android 11 und neuer müssen Sie die Speicherverwaltung erlauben.
-2. GPX-Ordner. Dies erlaubt es Ihnen, einen Ordner für die Dateioperationen auszuwählen. Wenn Sie das gemacht haben, braucht die Anwendung weder das Recht zur Speicherverwaltung noch das Recht externen Speicher zu schreiben und zu lesen. 
+1. Dokumentordner. Speichert und liest alle Dateien aus einem Unterordner im Dokumentenverzeichniss des Telefons. Für Android 10 und älter, werden Sie um Schreib- und Leserechte gebeten. Für Android 11 und neuer müssen Sie die Speicherverwaltung erlauben.
+2. GPX-Ordner. Dies erlaubt es Ihnen, einen Ordner für die Dateioperationen auszuwählen. Wenn Sie das gemacht haben, braucht die Anwendung weder das Recht zur Speicherverwaltung noch das Recht externen Speicher zu schreiben und zu lesen. Beachten Sie aber, dass einige Telefone hier keine Verzeichnisse vom internen Speicher erlauben. Was auch immer die Hersteller sich dabei gedacht haben.
 3. GPX-Wegpunkte speichern. Speichert die Wegpunkte als Text- und GPX-Datei.
 4. Wegpunktdatei laden. Lädt die Textdatei mit den Wegpunkten.
-5. Kallibrierung. Liest mehrere Positionsangaben und ermittelt den Durchschnitt. Damit sollten  Sie beim Speichern eines Wegpunktes genauere Werte ermitteln.
-6. Darkmode. Ändert das Erscheinungsbild von Dunkel zu Hell und umgekehrt.
+5. Kallibrierung. Liest mehrere Positionsangaben und ermittelt den Durchschnitt. Wenn die Kallibrierung eingaschaltet ist, warten Sie, bis die Positionsanzeige stabil bleibt und keine Abweichungen mehr meldet, dann speichern Sie die aktuelle Position bevor die Kallibrierung wieder abgeschaltet wird.
+6. Darkmode. Ändert das Erscheinungsbild von dunkel zu hell und umgekehrt.
 7. Kartenansichet. Wechselt von der Kompassansicht zur Kartenansicht mit Openstreetmap und umgekehrt.
 8. Folge Position. Scrollt die Kartenansicht immer zum aktuellen Standort.
 9. Speichervewaltung. Nur bei Android 11 und neuer. Hiermit können Sie das Recht der Speicherverwaltung gewähren oder entziehen.

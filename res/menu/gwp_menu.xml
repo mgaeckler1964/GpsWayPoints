@@ -28,8 +28,8 @@
 			<item android:visible="true" android:title="@string/darkMode" android:id="@+id/darkMode" android:checkable="true" android:checked="false" android:enabled="true"/>
 			<item android:visible="true" android:title="@string/mapLabel" android:id="@+id/mapLabel" android:checkable="true" android:checked="false" android:enabled="true"/>
 			<item android:visible="true" android:title="@string/followPos" android:id="@+id/followPos" android:checkable="true" android:checked="false" android:enabled="true"/>
-			<item android:visible="true" android:title="@string/displayStorageManagePermission" android:id="@+id/displayStorageManagePermission" android:checkable="true" android:checked="false" android:enabled="true"/>
 			<item android:visible="true" android:title="@string/extendedGPS" android:id="@+id/extendedGPS" android:checkable="true" android:checked="false" android:enabled="true"/>
+			<item android:visible="true" android:title="@string/displayStorageManagePermission" android:id="@+id/displayStorageManagePermission" android:checkable="true" android:checked="false" android:enabled="true"/>
 			<item android:visible="true" android:title="@string/notification" android:id="@+id/notification" android:checkable="true" android:checked="false" android:enabled="true"/>
 		</menu>
 	</item>
