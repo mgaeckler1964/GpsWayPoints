@@ -1,11 +1,10 @@
 ﻿# GpsWayPoints
  
-Dieses Programm zeigt die Richtung und die Entfernng zu einem bekannten 
-Punkt auf der Erde.
+Dieses Programm zeigt die Richtung und die Entfernng zu einem bekannten Punkt auf der Erde, im folgenden mit Ziel bezeichnet. In der Kompassanzeige wird mit dem roten Zeiger die Richtung zu Ziel angezeigt. Der grüne Zeiger zeigt Ihre aktuelle oder letzte Bewegungsrichtung. Unter den Zeigern wird die horizontale und vertikale Entfernung zum Ziel angezeigt. 
 
 Die Funktionen im Menü:
-1. Standort speichern: Merkt sich Ihre aktuelle Position und zeigt von nun an die Richtung und Entfernung zum Ziel.
-2. Standort mit Namen Speichern: Speichert den aktuellen Standort mit Namen, so dass Sie diesen jederzeit wieder herstellen können.
+1. Standort speichern: Merkt sich Ihre aktuelle Position als Ziel und zeigt von nun an die Richtung und Entfernung zum Ziel.
+2. Standort mit Namen Speichern: Speichert den aktuellen Standort mit Namen als Wegpunkt und Ziel, so dass Sie diesen jederzeit wieder herstellen können.
 3. Weg aufzeichnen. Speichert einen GPX-Track Ihres aktuellen Weges. 
 4. Ziel mit Namen Speichern. Speichert den zuletzt geladenen Wegpunkt unter einem neuen Namen.
 5. Wegpunkt zeigen. Zeigt Ihnen einen Wegpunkt, den Sie auswählen können, auf der Karte.
@@ -21,13 +20,13 @@ Das Einrichtungsmenü:
 2. GPX-Ordner. Dies erlaubt es Ihnen, einen Ordner für die Dateioperationen auszuwählen. Wenn Sie das gemacht haben, braucht die Anwendung weder das Recht zur Speicherverwaltung noch das Recht externen Speicher zu schreiben und zu lesen. Beachten Sie aber, dass einige Telefone hier keine Verzeichnisse vom internen Speicher erlauben. Was auch immer die Hersteller sich dabei gedacht haben.
 3. GPX-Wegpunkte speichern. Speichert die Wegpunkte als Text- und GPX-Datei.
 4. Wegpunktdatei laden. Lädt die Textdatei mit den Wegpunkten.
-5. Kallibrierung. Liest mehrere Positionsangaben und ermittelt den Durchschnitt. Wenn die Kallibrierung eingaschaltet ist, warten Sie, bis die Positionsanzeige stabil bleibt und keine Abweichungen mehr meldet, dann speichern Sie die aktuelle Position bevor die Kallibrierung wieder abgeschaltet wird.
+5. Kallibrierung. Liest mehrere Positionsangaben und ermittelt den Durchschnitt. Wenn die Kallibrierung eingeschaltet ist, warten Sie, bis die Positionsanzeige stabil bleibt und keine Abweichungen mehr meldet, dann speichern Sie die aktuelle Position bevor die Kallibrierung wieder abgeschaltet wird.
 6. Darkmode. Ändert das Erscheinungsbild von dunkel zu hell und umgekehrt.
-7. Kartenansichet. Wechselt von der Kompassansicht zur Kartenansicht mit Openstreetmap und umgekehrt.
+7. Kartenansicht. Wechselt von der Kompassansicht zur Kartenansicht mit Openstreetmap und umgekehrt.
 8. Folge Position. Scrollt die Kartenansicht immer zum aktuellen Standort.
 9. Speichervewaltung. Nur bei Android 11 und neuer. Hiermit können Sie das Recht der Speicherverwaltung gewähren oder entziehen.
-10. Zusätliche Positionierung. Zeigt auf der Karte zusätzlich zum GPS-Standort noch andere Provider wie Netzwork und Fused an. Das ist nützlich, um zu sehen, wie stark die anderen Locationprovider vom GPS-Signal abweichen.
-11. Benachrichtigung. Hiermit können Sie die Benachrichtigung (de)aktivieren. Benachrichtigunen sind nützlich, um zu sehen, ob der GPS-Service der Anwendung gerade läuft oder nicht. Wenn Sie einen GPX-Track gerade aufzeichen, wird die Aufzeichnung gestoppt, wenn Sie auf die Benachrichtigung klicken.
+10. Zusätliche Positionierung. Zeigt auf der Karte zusätzlich zum GPS-Standort noch andere Provider wie Network und Fused an. Das ist nützlich, um zu sehen, wie stark die anderen Locationprovider vom GPS-Signal abweichen.
+11. Benachrichtigung. Hiermit können Sie die Benachrichtigung (de)aktivieren. Benachrichtigungen sind nützlich, um zu sehen, ob der GPS-Service der Anwendung gerade läuft oder nicht. Wenn Sie einen GPX-Track gerade aufzeichen, wird die Aufzeichnung gestoppt, wenn Sie auf die Benachrichtigung klicken.
 
 Zum Übersetzen der Quellen habe ich 
 
