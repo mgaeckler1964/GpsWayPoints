@@ -18,8 +18,8 @@ android {
 
 	defaultConfig {
 		applicationId "at.gaeckler.GpsWayPoints"
-		// 21: Technisches Minimum (AppCompat/MultiDex).
-		// 26: APK wird kleiner (weniger Legacy-Support).
+		// 23: Technisches Minimum (AppCompat/MultiDex).
+		// 26: Technisches Minimum (Service).
 		// 28: APK wird größer (unkomprimierte native Libs), dafür schnellerer Start & weniger RAM-Verbrauch.
 		minSdk 28
 		targetSdk 36
