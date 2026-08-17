@@ -407,17 +407,9 @@ public class GpsWayPointsActivity extends GpsActivity
 	{
 		int	itemId = item.getItemId();
 
-		if( itemId == R.id.loadPos )
+		if( itemId == R.id.savePos )
 		{
-			selectWayPoint(SelectorMode.LOAD_POS);
-		}
-		else if ( itemId == R.id.showPos )
-		{
-			selectWayPoint(SelectorMode.SHOW_POS);
-		}
-		else if( itemId == R.id.deletePos )
-		{
-			selectWayPoint(SelectorMode.DELETE_POS);
+			saveHome();
 		}
 		else if( itemId == R.id.savePosAs )
 		{
@@ -427,38 +419,21 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			saveHomeAs();
 		}
-		else if( itemId == R.id.savePos )
-		{
-			saveHome();
-		}
-		else if( itemId == R.id.displayStorageManagePermission )
-		{
-			displayStorageManagePermission();
-		}
-		else if(itemId == R.id.selectStorageFolder)
-		{
-			selectStorageFolder();
-		}
-		else if(itemId == R.id.selectPublicFolder)
-		{
-			selectPublicFolder();
-			requestStoragePermission(R.drawable.icon, "GPS-Waypoints");
-		}
 		else if( itemId == R.id.trackGps )
 		{
 			trackGps();
 		}
-		else if( itemId == R.id.saveWPT )
+		else if ( itemId == R.id.showPos )
 		{
-			saveWPT();
+			selectWayPoint(SelectorMode.SHOW_POS);
 		}
-		else if( itemId == R.id.loadWPT )
+		else if( itemId == R.id.loadPos )
 		{
-			loadWPT();
+			selectWayPoint(SelectorMode.LOAD_POS);
 		}
-		else if( itemId == R.id.calibration )
+		else if( itemId == R.id.deletePos )
 		{
-			calibration();
+			selectWayPoint(SelectorMode.DELETE_POS);
 		}
 		else if( itemId == R.id.autoGps )
 		{
@@ -476,19 +451,30 @@ public class GpsWayPointsActivity extends GpsActivity
 		{
 			getService().createGpsTimer(GpsService.SLOW_GPS);
 		}
+		else if(itemId == R.id.selectPublicFolder)
+		{
+			selectPublicFolder();
+			requestStoragePermission(R.drawable.icon, "GPS-Waypoints");
+		}
+		else if(itemId == R.id.selectStorageFolder)
+		{
+			selectStorageFolder();
+		}
+		else if( itemId == R.id.saveWPT )
+		{
+			saveWPT();
+		}
+		else if( itemId == R.id.loadWPT )
+		{
+			loadWPT();
+		}
+		else if( itemId == R.id.calibration )
+		{
+			calibration();
+		}
 		else if( itemId == R.id.darkMode )
 		{
 			switchColorMode(!m_darkMode);
-		}
-		else if( itemId ==  R.id.exit )
-		{
-			saveGpxTrack();
-			stopGpsService();
-			finish();
-		}
-		else if( itemId == R.id.about )
-		{
-			showAbout();
 		}
 		else if( itemId == R.id.mapLabel )
 		{
@@ -505,9 +491,23 @@ public class GpsWayPointsActivity extends GpsActivity
 			else
 				getService().useExtendedGPS();
 		}
+		else if( itemId == R.id.displayStorageManagePermission )
+		{
+			displayStorageManagePermission();
+		}
 		else if( itemId == R.id.notification )
 		{
 			openNotificationSettings();
+		}
+		else if( itemId == R.id.about )
+		{
+			showAbout();
+		}
+		else if( itemId ==  R.id.exit )
+		{
+			saveGpxTrack();
+			stopGpsService();
+			finish();
 		}
 
 		return super.onOptionsItemSelected(item);
@@ -871,6 +871,7 @@ public class GpsWayPointsActivity extends GpsActivity
 		if(getCalibration())
 		{
 			lastLocation = getService().getCalibratedLocation("GPS");
+			getService().disableCalibration();
 		}
 		else
 		{

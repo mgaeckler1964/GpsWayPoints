@@ -23,8 +23,8 @@ android {
 		// 28: APK wird größer (unkomprimierte native Libs), dafür schnellerer Start & weniger RAM-Verbrauch.
 		minSdk 28
 		targetSdk 36
-		versionCode 22
-		versionName "4.8.16"
+		versionCode 23
+		versionName "4.8.17"
 		resValue "string", "app_version", "\"${versionName}\""
 	}
 

@@ -3,8 +3,8 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
 	<item android:visible="true" android:title="@string/savePos" android:id="@+id/savePos" android:checkable="false" android:checked="false" android:enabled="true"/>
 	<item android:visible="true" android:title="@string/savePosAs" android:id="@+id/savePosAs" android:checkable="false" android:checked="false" android:enabled="true"/>
-	<item android:visible="true" android:title="@string/trackGps" android:id="@+id/trackGps" android:checkable="true" android:checked="false" android:enabled="true"/>
 	<item android:visible="true" android:title="@string/saveHomeAs" android:id="@+id/saveHomeAs" android:checkable="false" android:checked="false" android:enabled="true"/>
+	<item android:visible="true" android:title="@string/trackGps" android:id="@+id/trackGps" android:checkable="true" android:checked="false" android:enabled="true"/>
 	<item android:visible="true" android:title="@string/showPos" android:id="@+id/showPos" android:checkable="false" android:checked="false" android:enabled="true"/>
 	<item android:visible="true" android:title="@string/loadPos" android:id="@+id/loadPos" android:checkable="false" android:checked="false" android:enabled="true"/>
 	<item android:visible="true" android:title="@string/deletePos" android:id="@+id/deletePos" android:checkable="false" android:checked="false" android:enabled="true"/>
